@@ -6,6 +6,8 @@ Date: 24/04/2024
 # Imports
 import pygame
 import os
+from Player import Player
+from Block import Block
 
 # Pygame Constants
 WINDOW_WIDTH = 1024
@@ -15,8 +17,6 @@ LEFT = 1
 SCROLL = 2
 RIGHT = 3
 PLAYER_BACKGROUND = (56, 228, 129)
-COLS = 9
-ROWS = 9
 
 # Files Constants
 FILE_PATH_CURRENT = os.path.dirname(__file__)
@@ -25,69 +25,26 @@ FILE_PATH_BOARD = os.path.join(FILE_PATH_IMAGES_FOLDER, 'quoridor_board.png')
 FILE_PATH_BLUE_PLAYER = os.path.join(FILE_PATH_IMAGES_FOLDER, 'player_blue.png')
 FILE_PATH_RED_PLAYER = os.path.join(FILE_PATH_IMAGES_FOLDER, 'player_red.png')
 
+# Game Constants
+PLAYER_NONE = 0
+PLAYER_BLUE = 1
+PLAYER_RED = 2
+COLS = 9
+ROWS = 9
 
-class Player:
-    def __init__(self, x: int, y: int):
-        self.x = x
-        self.y = y
-
-    def get_position(self) -> tuple:
-        return self.x, self.y
-
-    def move_up(self) -> None:
-        self.y -= 80
-
-    def move_down(self) -> None:
-        self.y += 80
-
-    def move_right(self) -> None:
-        self.x += 80
-
-    def move_left(self) -> None:
-        self.x -= 80
-
-
-class Block:
-    def __init__(self, x: int, y: int):
-        self.x = x
-        self.y = y
-        self.player = 0
-        self.up = 'clear'
-        self.down = 'clear'
-        self.right = 'clear'
-        self.left = 'clear'
-
-    def update_position(self, x: int, y: int) -> None:
-        self.x = x
-        self.y = y
-
-    def get_position(self) -> tuple:
-        return self.x, self.y
-
-    def update_player(self, player: int) -> None:
-        self.player = player
-
-    def update_wall(self, side: str) -> None:
-        if side == 'up':
-            self.up = 'blocked'
-        elif side == 'down':
-            self.down = 'blocked'
-        elif side == 'right':
-            self.right = 'blocked'
-        elif side == 'left':
-            self.left = 'blocked'
-
-    def get_wall_status(self, side: str) -> str:
-        ret = ''
-        if side == 'up':
-            ret = self.up
-        elif side == 'down':
-            ret = self.down
-        elif side == 'right':
-            ret = self.right
-        elif side == 'left':
-            ret = self.left
-        return ret
+def decide_which_direction(mouse_pos, player_object: Player) -> str:
+    x_difference = mouse_pos[0] - player_object.get_coordinates()[0]
+    y_difference = mouse_pos[1] - player_object.get_coordinates()[1]
+    ret_val = 'invalid'
+    if x_difference in range(80, 128) and y_difference in range(0, 48):
+        ret_val = 'right'
+    if x_difference in range(-80, -32) and y_difference in range(0, 48):
+        ret_val = 'left'
+    if y_difference in range(80, 128) and x_difference in range(0, 48):
+        ret_val = 'down'
+    if y_difference in range(-80, -32) and x_difference in range(0, 48):
+        ret_val = 'up'
+    return ret_val
 
 
 def main():
@@ -113,8 +70,8 @@ def main():
     pygame.display.flip()
 
     # Creating Player objects
-    player_blue_object = Player(336, 656)
-    player_red_object = Player(336, 16)
+    player_blue_object = Player(336, 656, [8, 4])
+    player_red_object = Player(336, 16, [0, 4])
 
     # Creating 2D array for representation of board
     blocks_array = [[Block for _ in range(COLS)] for _ in range(ROWS)]
@@ -129,14 +86,44 @@ def main():
             x_block += 80
         y_block += 80
 
+    # Inputting starting point of player in the block array
+    blocks_array[player_blue_object.block[0]][player_blue_object.block[1]].update_player(PLAYER_BLUE)
+    blocks_array[player_red_object.block[0]][player_blue_object.block[1]].update_player(PLAYER_RED)
+
+    # Setting the first player to go
+    player_turn_object = player_blue_object
+    player_turn_id = PLAYER_BLUE
+
     finish = False
     while not finish:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 finish = True
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT:
+                mouse_pos = pygame.mouse.get_pos()
+                side = decide_which_direction(mouse_pos, player_turn_object)
+                if side != 'invalid':
+                    blocks_array[player_turn_object.block[0]][player_turn_object.block[1]].update_player(PLAYER_NONE)
+                if side == 'right':
+                    player_turn_object.move_right()
+                elif side == 'left':
+                    player_turn_object.move_left()
+                elif side == 'up':
+                    player_turn_object.move_up()
+                elif side == 'down':
+                    player_turn_object.move_down()
+                if side != 'invalid':
+                    blocks_array[player_turn_object.block[0]][player_turn_object.block[1]].update_player(player_turn_id)
+                    if player_turn_id == PLAYER_BLUE:
+                        player_turn_object = player_red_object
+                        player_turn_id = PLAYER_RED
+                    else:
+                        player_turn_object = player_blue_object
+                        player_turn_id = PLAYER_BLUE
+
         screen.blit(board, [0, 0])
-        screen.blit(player_blue_image, list(player_blue_object.get_position()))
-        screen.blit(player_red_image, list(player_red_object.get_position()))
+        screen.blit(player_blue_image, list(player_blue_object.get_coordinates()))
+        screen.blit(player_red_image, list(player_red_object.get_coordinates()))
         pygame.display.flip()
 
     pygame.quit()
