@@ -32,19 +32,51 @@ PLAYER_RED = 2
 COLS = 9
 ROWS = 9
 
-def decide_which_direction(mouse_pos, player_object: Player) -> str:
+
+def decide_which_direction(mouse_pos, player_object: Player, are_adjacent: str) -> str:
+    add_right, add_left, add_up, add_down = [0, 0, 0, 0]
+    if are_adjacent != 'not adjacent':
+        if are_adjacent == 'right':
+            add_right += 80
+        elif are_adjacent == 'left':
+            add_left -= 80
+        elif are_adjacent == 'down':
+            add_down += 80
+        elif are_adjacent == 'up':
+            add_up -= 80
     x_difference = mouse_pos[0] - player_object.get_coordinates()[0]
     y_difference = mouse_pos[1] - player_object.get_coordinates()[1]
     ret_val = 'invalid'
-    if x_difference in range(80, 128) and y_difference in range(0, 48):
+    if x_difference in range(80 + add_right, 128 + add_right) and y_difference in range(0, 48):
         ret_val = 'right'
-    if x_difference in range(-80, -32) and y_difference in range(0, 48):
+    elif x_difference in range(-80 + add_left, -32 + add_left) and y_difference in range(0, 48):
         ret_val = 'left'
-    if y_difference in range(80, 128) and x_difference in range(0, 48):
+    elif y_difference in range(80 + add_down, 128 + add_down) and x_difference in range(0, 48):
         ret_val = 'down'
-    if y_difference in range(-80, -32) and x_difference in range(0, 48):
+    elif y_difference in range(-80 + add_up, -32 + add_up) and x_difference in range(0, 48):
         ret_val = 'up'
     return ret_val
+
+
+def are_players_adjacent(player_blue_object: Player, player_red_object: Player, turn: int) -> str:
+    side = 'not adjacent'
+    blue_coordinates = player_blue_object.block
+    red_coordinates = player_red_object.block
+    if turn == 1:
+        x_difference = blue_coordinates[1] - red_coordinates[1]
+        y_difference = blue_coordinates[0] - red_coordinates[0]
+    else:
+        x_difference = red_coordinates[1] - blue_coordinates[1]
+        y_difference = red_coordinates[0] - blue_coordinates[0]
+    if x_difference == 1 and blue_coordinates[0] == red_coordinates[0]:
+        side = 'left'
+    elif x_difference == -1 and blue_coordinates[0] == red_coordinates[0]:
+        side = 'right'
+    elif y_difference == 1 and blue_coordinates[1] == red_coordinates[1]:
+        side = 'up'
+    elif y_difference == -1 and blue_coordinates[1] == red_coordinates[1]:
+        side = 'down'
+    return side
 
 
 def main():
@@ -101,18 +133,26 @@ def main():
                 finish = True
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT:
                 mouse_pos = pygame.mouse.get_pos()
-                side = decide_which_direction(mouse_pos, player_turn_object)
+                are_adjacent = are_players_adjacent(player_blue_object, player_red_object, player_turn_id)
+                side = decide_which_direction(mouse_pos, player_turn_object, are_adjacent)
                 if side != 'invalid':
                     blocks_array[player_turn_object.block[0]][player_turn_object.block[1]].update_player(PLAYER_NONE)
-                if side == 'right':
-                    player_turn_object.move_right()
-                elif side == 'left':
-                    player_turn_object.move_left()
-                elif side == 'up':
-                    player_turn_object.move_up()
-                elif side == 'down':
-                    player_turn_object.move_down()
-                if side != 'invalid':
+                    if side == 'right':
+                        player_turn_object.move_right()
+                        if are_adjacent == 'right':
+                            player_turn_object.move_right()
+                    elif side == 'left':
+                        player_turn_object.move_left()
+                        if are_adjacent == 'left':
+                            player_turn_object.move_left()
+                    elif side == 'up':
+                        player_turn_object.move_up()
+                        if are_adjacent == 'up':
+                            player_turn_object.move_up()
+                    elif side == 'down':
+                        player_turn_object.move_down()
+                        if are_adjacent == 'down':
+                            player_turn_object.move_down()
                     blocks_array[player_turn_object.block[0]][player_turn_object.block[1]].update_player(player_turn_id)
                     if player_turn_id == PLAYER_BLUE:
                         player_turn_object = player_red_object
