@@ -36,7 +36,7 @@ COLS = 9
 ROWS = 9
 
 
-def decide_which_direction(mouse_pos: tuple, player_object: Player, are_adjacent: str) -> str:
+def decide_which_direction(mouse_pos: tuple, player_object: Player, are_adjacent: str, block_array: list) -> str:
     add_right, add_left, add_up, add_down = [0, 0, 0, 0]
     if are_adjacent != 'not adjacent':
         if are_adjacent == 'right':
@@ -51,13 +51,17 @@ def decide_which_direction(mouse_pos: tuple, player_object: Player, are_adjacent
     y_difference = mouse_pos[1] - player_object.get_coordinates()[1]
     ret_val = 'invalid'
     if x_difference in range(80 + add_right, 128 + add_right) and y_difference in range(0, 48):
-        ret_val = 'right'
+        if block_array[player_object.block[0]][player_object.block[1] + 1 + add_right // 80].left == 'clear':
+            ret_val = 'right'
     elif x_difference in range(-80 + add_left, -32 + add_left) and y_difference in range(0, 48):
-        ret_val = 'left'
+        if block_array[player_object.block[0]][player_object.block[1] - 1 + add_left // 80].right == 'clear':
+            ret_val = 'left'
     elif y_difference in range(80 + add_down, 128 + add_down) and x_difference in range(0, 48):
-        ret_val = 'down'
+        if block_array[player_object.block[0] + 1 + add_down // 80][player_object.block[1]].up == 'clear':
+            ret_val = 'down'
     elif y_difference in range(-80 + add_up, -32 + add_up) and x_difference in range(0, 48):
-        ret_val = 'up'
+        if block_array[player_object.block[0] - 1 + add_up // 80][player_object.block[1]].down == 'clear':
+            ret_val = 'up'
     return ret_val
 
 
@@ -140,8 +144,8 @@ def add_wall_to_list(wall_list: list, side: str, mouse_pos: tuple, blocks_array:
             blocks_array[(y_cord - 16) // 80][x_cord // 80].update_wall('down')
             blocks_array[(y_cord - 16) // 80][(x_cord // 80) + 1].update_wall('down')
 
-            blocks_array[((y_cord - 16) // 80) + 1][x_cord // 80].update_wall('down')
-            blocks_array[((y_cord - 16) // 80) + 1][(x_cord // 80) + 1].update_wall('down')
+            blocks_array[((y_cord - 16) // 80) + 1][x_cord // 80].update_wall('up')
+            blocks_array[((y_cord - 16) // 80) + 1][(x_cord // 80) + 1].update_wall('up')
     if side == 'vertical':
         y_cord = mouse_pos[1] // 80 * 80 + 16
         x_cord = (mouse_pos[0] - 16) // 80 * 80 + 64
@@ -229,7 +233,7 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT:
                 mouse_pos = pygame.mouse.get_pos()
                 are_adjacent = are_players_adjacent(player_blue_object, player_red_object, player_turn_id)
-                side = decide_which_direction(mouse_pos, player_turn_object, are_adjacent)
+                side = decide_which_direction(mouse_pos, player_turn_object, are_adjacent, blocks_array)
                 if side != 'invalid':
                     blocks_array[player_turn_object.block[0]][player_turn_object.block[1]].update_player(PLAYER_NONE)
                     if side == 'right':

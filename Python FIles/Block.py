@@ -27,15 +27,3 @@ class Block:
             self.right = 'blocked'
         elif side == 'left':
             self.left = 'blocked'
-
-    def get_wall_status(self, side: str) -> str:
-        ret_val = 'Invalid'
-        if side == 'up':
-            ret_val = self.up
-        elif side == 'down':
-            ret_val = self.down
-        elif side == 'right':
-            ret_val = self.right
-        elif side == 'left':
-            ret_val = self.left
-        return ret_val
