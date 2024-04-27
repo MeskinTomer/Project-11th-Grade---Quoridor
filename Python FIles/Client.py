@@ -8,6 +8,7 @@ import pygame
 import os
 from Player import Player
 from Block import Block
+from Wall import Wall
 
 # Pygame Constants
 WINDOW_WIDTH = 1024
@@ -24,7 +25,8 @@ FILE_PATH_IMAGES_FOLDER = os.path.join(FILE_PATH_CURRENT, '..', 'Images')
 FILE_PATH_BOARD = os.path.join(FILE_PATH_IMAGES_FOLDER, 'quoridor_board.png')
 FILE_PATH_BLUE_PLAYER = os.path.join(FILE_PATH_IMAGES_FOLDER, 'player_blue.png')
 FILE_PATH_RED_PLAYER = os.path.join(FILE_PATH_IMAGES_FOLDER, 'player_red.png')
-FILE_PATH_WALL = os.path.join(FILE_PATH_IMAGES_FOLDER, 'wall.png')
+FILE_PATH_WALL_HORIZONTAL = os.path.join(FILE_PATH_IMAGES_FOLDER, 'wall_horizontal.png')
+FILE_PATH_WALL_VERTICAL = os.path.join(FILE_PATH_IMAGES_FOLDER, 'wall_vertical.png')
 
 # Game Constants
 PLAYER_NONE = 0
@@ -98,6 +100,7 @@ def is_trying_to_place_wall(mouse_pos: tuple) -> str:
         if y_cord <= y_mouse < y_cord + 32:
             trying_to_place_horizontal_2 = True
         y_cord += 80
+
     if trying_to_place_horizontal_1 == trying_to_place_horizontal_2 == True:
         ret_val = 'horizontal'
 
@@ -118,6 +121,47 @@ def is_trying_to_place_wall(mouse_pos: tuple) -> str:
         ret_val = 'vertical'
 
     return ret_val
+
+
+def add_wall_to_list(wall_list: list, side: str, mouse_pos: tuple, blocks_array: list, screen: pygame.display) -> list:
+    if side == 'horizontal':
+        x_cord = mouse_pos[0] // 80 * 80 + 16
+        y_cord = (mouse_pos[1] - 16) // 80 * 80 + 64
+
+        no_other_wall = True
+        for i in range(128):
+            for j in range(32):
+                if screen.get_at((x_cord + i, y_cord + j))[:3] != (67, 33, 57):
+                    no_other_wall = False
+        if no_other_wall:
+            wall = Wall(x_cord, y_cord, side)
+            wall_list.append(wall)
+
+            blocks_array[(y_cord - 16) // 80][x_cord // 80].update_wall('down')
+            blocks_array[(y_cord - 16) // 80][(x_cord // 80) + 1].update_wall('down')
+
+            blocks_array[((y_cord - 16) // 80) + 1][x_cord // 80].update_wall('down')
+            blocks_array[((y_cord - 16) // 80) + 1][(x_cord // 80) + 1].update_wall('down')
+    if side == 'vertical':
+        y_cord = mouse_pos[1] // 80 * 80 + 16
+        x_cord = (mouse_pos[0] - 16) // 80 * 80 + 64
+
+        no_other_wall = True
+        for i in range(32):
+            for j in range(128):
+                if screen.get_at((x_cord + i, y_cord + j))[:3] != (67, 33, 57):
+                    no_other_wall = False
+
+        if no_other_wall:
+            wall = Wall(x_cord, y_cord, side)
+            wall_list.append(wall)
+
+            blocks_array[y_cord // 80][(x_cord - 16) // 80].update_wall('right')
+            blocks_array[y_cord // 80 + 1][(x_cord - 16) // 80].update_wall('right')
+
+            blocks_array[y_cord // 80][((x_cord - 16) // 80) + 1].update_wall('left')
+            blocks_array[(y_cord // 80) + 1][((x_cord - 16) // 80) + 1].update_wall('left')
+    return blocks_array
 
 
 def main():
@@ -145,6 +189,16 @@ def main():
     # Creating Player objects
     player_blue_object = Player(336, 656, [8, 4])
     player_red_object = Player(336, 16, [0, 4])
+
+    # Loading wall images
+    wall_horizontal_image = pygame.image.load(FILE_PATH_WALL_HORIZONTAL).convert()
+    wall_horizontal_image.set_colorkey(BACKGROUND_COLOR)
+
+    wall_vertical_image = pygame.image.load(FILE_PATH_WALL_VERTICAL).convert()
+    wall_vertical_image.set_colorkey(BACKGROUND_COLOR)
+
+    # Creating Wall list
+    wall_list = []
 
     # Creating 2D array for representation of board
     blocks_array = [[Block for _ in range(COLS)] for _ in range(ROWS)]
@@ -203,11 +257,23 @@ def main():
                         player_turn_id = PLAYER_BLUE
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT:
                 mouse_pos = pygame.mouse.get_pos()
-                print(is_trying_to_place_wall(mouse_pos))
+                side = is_trying_to_place_wall(mouse_pos)
+                blocks_array = add_wall_to_list(wall_list, side, mouse_pos, blocks_array, screen)
+                if player_turn_id == PLAYER_BLUE:
+                    player_turn_object = player_red_object
+                    player_turn_id = PLAYER_RED
+                else:
+                    player_turn_object = player_blue_object
+                    player_turn_id = PLAYER_BLUE
 
         screen.blit(board, [0, 0])
         screen.blit(player_blue_image, list(player_blue_object.get_coordinates()))
         screen.blit(player_red_image, list(player_red_object.get_coordinates()))
+        for wall_object in wall_list:
+            if wall_object.side == 'horizontal':
+                screen.blit(wall_horizontal_image, list(wall_object.get_coordinates()))
+            else:
+                screen.blit(wall_vertical_image, list(wall_object.get_coordinates()))
         pygame.display.flip()
 
     pygame.quit()
