@@ -51,17 +51,33 @@ def decide_which_direction(mouse_pos: tuple, player_object: Player, are_adjacent
     y_difference = mouse_pos[1] - player_object.get_coordinates()[1]
     ret_val = 'invalid'
     if x_difference in range(80 + add_right, 128 + add_right) and y_difference in range(0, 48):
-        if block_array[player_object.block[0]][player_object.block[1] + 1 + add_right // 80].left == 'clear':
-            ret_val = 'right'
+        if block_array[player_object.block[0]][player_object.block[1] + 1].left == 'clear':
+            if add_right != 0:
+                if block_array[player_object.block[0]][player_object.block[1] + 1 + add_right // 80].left == 'clear':
+                    ret_val = 'right'
+            else:
+                ret_val = 'right'
     elif x_difference in range(-80 + add_left, -32 + add_left) and y_difference in range(0, 48):
-        if block_array[player_object.block[0]][player_object.block[1] - 1 + add_left // 80].right == 'clear':
-            ret_val = 'left'
+        if block_array[player_object.block[0]][player_object.block[1] - 1].right == 'clear':
+            if add_left != 0:
+                if block_array[player_object.block[0]][player_object.block[1] - 1 + add_left // 80].right == 'clear':
+                    ret_val = 'left'
+            else:
+                ret_val = 'left'
     elif y_difference in range(80 + add_down, 128 + add_down) and x_difference in range(0, 48):
-        if block_array[player_object.block[0] + 1 + add_down // 80][player_object.block[1]].up == 'clear':
-            ret_val = 'down'
+        if block_array[player_object.block[0] + 1][player_object.block[1]].up == 'clear':
+            if add_down != 0:
+                if block_array[player_object.block[0] + 1 + add_down // 80][player_object.block[1]].up == 'clear':
+                    ret_val = 'down'
+            else:
+                ret_val = 'down'
     elif y_difference in range(-80 + add_up, -32 + add_up) and x_difference in range(0, 48):
-        if block_array[player_object.block[0] - 1 + add_up // 80][player_object.block[1]].down == 'clear':
-            ret_val = 'up'
+        if block_array[player_object.block[0] - 1][player_object.block[1]].down == 'clear':
+            if add_up != 0:
+                if block_array[player_object.block[0] - 1 + add_up // 80][player_object.block[1]].down == 'clear':
+                    ret_val = 'up'
+            else:
+                ret_val = 'up'
     return ret_val
 
 
