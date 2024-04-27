@@ -16,7 +16,7 @@ REFRESH_RATE = 60
 LEFT = 1
 SCROLL = 2
 RIGHT = 3
-PLAYER_BACKGROUND = (56, 228, 129)
+BACKGROUND_COLOR = (56, 228, 129)
 
 # Files Constants
 FILE_PATH_CURRENT = os.path.dirname(__file__)
@@ -24,6 +24,7 @@ FILE_PATH_IMAGES_FOLDER = os.path.join(FILE_PATH_CURRENT, '..', 'Images')
 FILE_PATH_BOARD = os.path.join(FILE_PATH_IMAGES_FOLDER, 'quoridor_board.png')
 FILE_PATH_BLUE_PLAYER = os.path.join(FILE_PATH_IMAGES_FOLDER, 'player_blue.png')
 FILE_PATH_RED_PLAYER = os.path.join(FILE_PATH_IMAGES_FOLDER, 'player_red.png')
+FILE_PATH_WALL = os.path.join(FILE_PATH_IMAGES_FOLDER, 'wall.png')
 
 # Game Constants
 PLAYER_NONE = 0
@@ -33,7 +34,7 @@ COLS = 9
 ROWS = 9
 
 
-def decide_which_direction(mouse_pos, player_object: Player, are_adjacent: str) -> str:
+def decide_which_direction(mouse_pos: tuple, player_object: Player, are_adjacent: str) -> str:
     add_right, add_left, add_up, add_down = [0, 0, 0, 0]
     if are_adjacent != 'not adjacent':
         if are_adjacent == 'right':
@@ -79,6 +80,46 @@ def are_players_adjacent(player_blue_object: Player, player_red_object: Player, 
     return side
 
 
+def is_trying_to_place_wall(mouse_pos: tuple) -> str:
+    ret_val = 'invalid'
+
+    # Checking if trying to place horizontal wall
+    trying_to_place_horizontal_1 = False
+    trying_to_place_horizontal_2 = False
+    x_mouse = mouse_pos[0]
+    y_mouse = mouse_pos[1]
+    x_cord = 16
+    y_cord = 64
+    for i in range(8):
+        if x_cord <= x_mouse < x_cord + 48:
+            trying_to_place_horizontal_1 = True
+        x_cord += 80
+    for j in range(8):
+        if y_cord <= y_mouse < y_cord + 32:
+            trying_to_place_horizontal_2 = True
+        y_cord += 80
+    if trying_to_place_horizontal_1 == trying_to_place_horizontal_2 == True:
+        ret_val = 'horizontal'
+
+    # Checking if trying to place vertical wall
+    trying_to_place_vertical_1 = False
+    trying_to_place_vertical_2 = False
+    x_cord = 64
+    y_cord = 16
+    for i in range(8):
+        if x_cord <= x_mouse < x_cord + 32:
+            trying_to_place_vertical_1 = True
+        x_cord += 80
+    for j in range(8):
+        if y_cord <= y_mouse < y_cord + 48:
+            trying_to_place_vertical_2 = True
+        y_cord += 80
+    if trying_to_place_vertical_1 == trying_to_place_vertical_2 == True:
+        ret_val = 'vertical'
+
+    return ret_val
+
+
 def main():
     # Booting up pygame and creating screen
     pygame.init()
@@ -92,12 +133,12 @@ def main():
 
     # Drawing blue player
     player_blue_image = pygame.image.load(FILE_PATH_BLUE_PLAYER).convert()
-    player_blue_image.set_colorkey(PLAYER_BACKGROUND)
+    player_blue_image.set_colorkey(BACKGROUND_COLOR)
     screen.blit(player_blue_image, [336, 656])
 
     # Drawing red player
     player_red_image = pygame.image.load(FILE_PATH_RED_PLAYER).convert()
-    player_red_image.set_colorkey(PLAYER_BACKGROUND)
+    player_red_image.set_colorkey(BACKGROUND_COLOR)
     screen.blit(player_red_image, [336, 16])
     pygame.display.flip()
 
@@ -160,6 +201,9 @@ def main():
                     else:
                         player_turn_object = player_blue_object
                         player_turn_id = PLAYER_BLUE
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT:
+                mouse_pos = pygame.mouse.get_pos()
+                print(is_trying_to_place_wall(mouse_pos))
 
         screen.blit(board, [0, 0])
         screen.blit(player_blue_image, list(player_blue_object.get_coordinates()))
