@@ -6,6 +6,7 @@ Date: 24/04/2024
 # Imports
 import pygame
 import os
+import time
 from Player import Player
 from Block import Block
 from Wall import Wall
@@ -184,6 +185,17 @@ def add_wall_to_list(wall_list: list, side: str, mouse_pos: tuple, blocks_array:
     return blocks_array
 
 
+def check_win(player_blue_object: Player, player_red_object: Player) -> str:
+    winner = ''
+    if player_blue_object.y == 16:
+        winner = 'blue'
+    elif player_red_object.y == 656:
+        winner = 'red'
+    else:
+        winner = 'None'
+    return winner
+
+
 def main():
     # Booting up pygame and creating screen
     pygame.init()
@@ -235,7 +247,7 @@ def main():
 
     # Inputting starting point of player in the block array
     blocks_array[player_blue_object.block[0]][player_blue_object.block[1]].update_player(PLAYER_BLUE)
-    blocks_array[player_red_object.block[0]][player_blue_object.block[1]].update_player(PLAYER_RED)
+    blocks_array[player_red_object.block[0]][player_red_object.block[1]].update_player(PLAYER_RED)
 
     # Setting the first player to go
     player_turn_object = player_blue_object
@@ -285,7 +297,6 @@ def main():
                 else:
                     player_turn_object = player_blue_object
                     player_turn_id = PLAYER_BLUE
-
         screen.blit(board, [0, 0])
         screen.blit(player_blue_image, list(player_blue_object.get_coordinates()))
         screen.blit(player_red_image, list(player_red_object.get_coordinates()))
@@ -295,6 +306,23 @@ def main():
             else:
                 screen.blit(wall_vertical_image, list(wall_object.get_coordinates()))
         pygame.display.flip()
+
+        # Check if someone won the game
+        winner = check_win(player_blue_object, player_red_object)
+        if winner != 'None':
+            time.sleep(5)
+
+            for i in range(ROWS):
+                for j in range(COLS):
+                    blocks_array[i][j].restart_block()
+
+            player_blue_object.restart('blue')
+            player_red_object.restart('red')
+
+            blocks_array[player_blue_object.block[0]][player_blue_object.block[1]].update_player(PLAYER_BLUE)
+            blocks_array[player_red_object.block[0]][player_red_object.block[1]].update_player(PLAYER_RED)
+
+            wall_list.clear()
 
     pygame.quit()
 

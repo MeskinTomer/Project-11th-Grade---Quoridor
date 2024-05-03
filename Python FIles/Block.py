@@ -27,3 +27,11 @@ class Block:
             self.right = 'blocked'
         elif side == 'left':
             self.left = 'blocked'
+
+    def restart_block(self) -> None:
+        self.player = 0
+        self.up = 'clear'
+        self.down = 'clear'
+        self.right = 'clear'
+        self.left = 'clear'
+

@@ -22,3 +22,13 @@ class Player:
     def move_left(self) -> None:
         self.x -= 80
         self.block[1] -= 1
+
+    def restart(self, color: str) -> None:
+        if color == 'blue':
+            self.x = 336
+            self.y = 656
+            self.block = [8, 4]
+        if color == 'red':
+            self.x = 336
+            self.y = 16
+            self.block = [0, 4]
