@@ -10,6 +10,8 @@ import time
 from Player import Player
 from Block import Block
 from Wall import Wall
+from datetime import datetime
+
 
 # Pygame Constants
 WINDOW_WIDTH = 1024
@@ -202,6 +204,7 @@ def main():
     size = (WINDOW_WIDTH, WINDOW_HEIGHT)
     screen = pygame.display.set_mode(size)
     pygame.display.set_caption("Quoridor")
+    clock = pygame.time.Clock()
 
     # Drawing board
     board = pygame.image.load(FILE_PATH_BOARD)
@@ -253,6 +256,16 @@ def main():
     player_turn_object = player_blue_object
     player_turn_id = PLAYER_BLUE
 
+    # Setting text box for timer
+    font = pygame.font.Font('freesansbold.ttf', 55)
+    text = font.render('01:00', True, (0, 255, 0), (0, 0, 128))
+    text_object = text.get_rect()
+    text_object.center = (800, 150)
+
+    # Setting timer
+    start_time = datetime.now().time()
+    print(start_time.second)
+
     finish = False
     while not finish:
         for event in pygame.event.get():
@@ -300,12 +313,14 @@ def main():
         screen.blit(board, [0, 0])
         screen.blit(player_blue_image, list(player_blue_object.get_coordinates()))
         screen.blit(player_red_image, list(player_red_object.get_coordinates()))
+        screen.blit(text, text_object)
         for wall_object in wall_list:
             if wall_object.side == 'horizontal':
                 screen.blit(wall_horizontal_image, list(wall_object.get_coordinates()))
             else:
                 screen.blit(wall_vertical_image, list(wall_object.get_coordinates()))
         pygame.display.flip()
+        clock.tick(REFRESH_RATE)
 
         # Check if someone won the game
         winner = check_win(player_blue_object, player_red_object)
