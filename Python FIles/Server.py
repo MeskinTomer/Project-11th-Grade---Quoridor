@@ -1,6 +1,6 @@
 """
 Author: Tomer Meskin
-Date: 24/04/2024
+Date: 12/5/2024
 """
 
 # Imports
@@ -13,11 +13,12 @@ from Block import Block
 from Wall import Wall
 from datetime import datetime
 from GameFunctions import *
+from Protocol import *
 
 # Socket Constants
 QUEUE_SIZE = 1
 IP = '0.0.0.0'
-PORT = 80
+PORT = 1779
 SOCKET_TIMEOUT = 90
 
 # Game Constants
@@ -26,6 +27,23 @@ PLAYER_BLUE = 1
 PLAYER_RED = 2
 COLS = 9
 ROWS = 9
+
+# Commands
+ID = 'identification'
+ID_ONE = 'player one'
+ID_TWO = 'player two'
+TURN = 'turn'
+YOUR_TURN = 'your turn'
+NOT_YOUR_TURN = 'not your turn'
+MOVE = 'move'
+MOVE_RIGHT = 'right'
+MOVE_LEFT = 'left'
+MOVE_UP = 'up'
+MOVE_DOWN = 'down'
+WALL = 'wall'
+NO_MOVE = 'no move'
+BLANK = ''
+
 
 def main():
     # Creating Player objects
@@ -61,6 +79,16 @@ def main():
 
         client_socket1, client_address1 = server_socket.accept()
         client_socket2, client_address2 = server_socket.accept()
+
+        client_socket1.send(protocol_send(ID, ID_ONE))
+        client_socket2.send(protocol_send(ID, ID_TWO))
+
+        client_socket1.send(protocol_send(TURN, YOUR_TURN))
+        client_socket2.send(protocol_send(TURN, NOT_YOUR_TURN))
+
+        # Setting the first player to go
+        player_turn_id = 1
+
         finish = False
         while not finish:
 

@@ -5,6 +5,7 @@ Date: 24/04/2024
 
 # Imports
 import pygame
+import socket
 import os
 import time
 from Player import Player
@@ -12,6 +13,7 @@ from Block import Block
 from Wall import Wall
 from datetime import datetime
 from GameFunctions import *
+from Protocol import *
 
 
 # Pygame Constants
@@ -39,8 +41,23 @@ PLAYER_RED = 2
 COLS = 9
 ROWS = 9
 
+# Socket Constants
+IP = '127.0.0.1'
+PORT = 1779
 
-
+# Commands
+ID = 'identification'
+ID_ONE = 'player one'
+ID_TWO = 'player two'
+TURN = 'turn'
+YOUR_TURN = 'your turn'
+NOT_YOUR_TURN = 'not your turn'
+MOVE = 'move'
+MOVE_RIGHT = 'right'
+MOVE_LEFT = 'left'
+MOVE_UP = 'up'
+MOVE_DOWN = 'down'
+WALL = 'wall'
 
 
 def main():
@@ -111,6 +128,12 @@ def main():
     start_time = datetime.now().time()
     print(start_time.second)
 
+    my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        my_socket.connect((IP, PORT))
+        my_socket.send(protocol_send('hi', 'hello'))
+    except socket.error as err:
+        print(err)
     finish = False
     while not finish:
         for event in pygame.event.get():
