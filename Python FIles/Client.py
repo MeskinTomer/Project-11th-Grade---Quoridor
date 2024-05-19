@@ -128,10 +128,12 @@ def main():
     start_time = datetime.now().time()
     print(start_time.second)
 
+    # Setting turn variable
+    turn = True
+
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         my_socket.connect((IP, PORT))
-        my_socket.send(protocol_send('hi', 'hello'))
     except socket.error as err:
         print(err)
     finish = False
@@ -141,27 +143,8 @@ def main():
                 finish = True
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT:
                 mouse_pos = pygame.mouse.get_pos()
-                are_adjacent = are_players_adjacent(player_blue_object, player_red_object, player_turn_id)
-                side = decide_which_direction(mouse_pos, player_turn_object, are_adjacent, blocks_array)
+                side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
                 if side != 'invalid':
-                    blocks_array[player_turn_object.block[0]][player_turn_object.block[1]].update_player(PLAYER_NONE)
-                    if side == 'right':
-                        player_turn_object.move_right()
-                        if are_adjacent == 'right':
-                            player_turn_object.move_right()
-                    elif side == 'left':
-                        player_turn_object.move_left()
-                        if are_adjacent == 'left':
-                            player_turn_object.move_left()
-                    elif side == 'up':
-                        player_turn_object.move_up()
-                        if are_adjacent == 'up':
-                            player_turn_object.move_up()
-                    elif side == 'down':
-                        player_turn_object.move_down()
-                        if are_adjacent == 'down':
-                            player_turn_object.move_down()
-                    blocks_array[player_turn_object.block[0]][player_turn_object.block[1]].update_player(player_turn_id)
                     if player_turn_id == PLAYER_BLUE:
                         player_turn_object = player_red_object
                         player_turn_id = PLAYER_RED
@@ -170,14 +153,14 @@ def main():
                         player_turn_id = PLAYER_BLUE
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT:
                 mouse_pos = pygame.mouse.get_pos()
-                side = is_trying_to_place_wall(mouse_pos)
-                blocks_array = add_wall_to_list(wall_list, side, mouse_pos, blocks_array, screen)
-                if player_turn_id == PLAYER_BLUE:
-                    player_turn_object = player_red_object
-                    player_turn_id = PLAYER_RED
-                else:
-                    player_turn_object = player_blue_object
-                    player_turn_id = PLAYER_BLUE
+                side = wall_addition_function(mouse_pos, wall_list, blocks_array, screen)
+                if side != 'invalid':
+                    if player_turn_id == PLAYER_BLUE:
+                        player_turn_object = player_red_object
+                        player_turn_id = PLAYER_RED
+                    else:
+                        player_turn_object = player_blue_object
+                        player_turn_id = PLAYER_BLUE
         screen.blit(board, [0, 0])
         screen.blit(player_blue_image, list(player_blue_object.get_coordinates()))
         screen.blit(player_red_image, list(player_red_object.get_coordinates()))

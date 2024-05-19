@@ -184,6 +184,36 @@ def add_wall_to_list(wall_list: list, side: str, mouse_pos: tuple, blocks_array:
     return blocks_array
 
 
+def player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object):
+    are_adjacent = are_players_adjacent(player_blue_object, player_red_object, player_turn_id)
+    side = decide_which_direction(mouse_pos, player_turn_object, are_adjacent, blocks_array)
+    if side != 'invalid':
+        blocks_array[player_turn_object.block[0]][player_turn_object.block[1]].update_player(PLAYER_NONE)
+        if side == 'right':
+            player_turn_object.move_right()
+            if are_adjacent == 'right':
+                player_turn_object.move_right()
+        elif side == 'left':
+            player_turn_object.move_left()
+            if are_adjacent == 'left':
+                player_turn_object.move_left()
+        elif side == 'up':
+            player_turn_object.move_up()
+            if are_adjacent == 'up':
+                player_turn_object.move_up()
+        elif side == 'down':
+            player_turn_object.move_down()
+            if are_adjacent == 'down':
+                player_turn_object.move_down()
+        blocks_array[player_turn_object.block[0]][player_turn_object.block[1]].update_player(player_turn_id)
+    return side
+
+
+def wall_addition_function(mouse_pos, wall_list, blocks_array, screen):
+    side = is_trying_to_place_wall(mouse_pos)
+    blocks_array = add_wall_to_list(wall_list, side, mouse_pos, blocks_array, screen)
+    return side
+
 def check_win(player_blue_object: Player, player_red_object: Player) -> str:
     winner = ''
     if player_blue_object.y == 16:
