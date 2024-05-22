@@ -43,8 +43,9 @@ MOVE_DOWN = 'down'
 WALL = 'wall'
 NO_MOVE = 'no move'
 BLANK = ''
-WALL_VERTICAL = 'vertical'
-WALL_HORIZONTAL = 'horizontal'
+ACK = 'acknowledgement'
+ACK_VALID = 'valid'
+ACK_INVALID = 'invalid'
 
 
 def main():
@@ -85,8 +86,17 @@ def main():
         client_socket1.send(protocol_send(ID, ID_ONE))
         #client_socket2.send(protocol_send(ID, ID_TWO))
 
-        client_socket1.send(protocol_send(TURN, YOUR_TURN))
+        #client_socket1.send(protocol_send(TURN, YOUR_TURN))
         #client_socket2.send(protocol_send(TURN, NOT_YOUR_TURN))
+
+        response = protocol_recv(client_socket1)
+        print(response)
+        if response[0] == ACK and response[1] == ACK_VALID:
+            client_socket1.send(shape_command(WALL, '268 398'))
+        response = protocol_recv(client_socket1)
+        print(response)
+        if response[0] == ACK and response[1] == ACK_VALID:
+            client_socket1.send(shape_command(TURN, YOUR_TURN))
 
         # Setting the first player to go
         player_turn_id = 1

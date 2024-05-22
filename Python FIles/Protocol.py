@@ -18,8 +18,9 @@ MOVE_LEFT = 'left'
 MOVE_UP = 'up'
 MOVE_DOWN = 'down'
 WALL = 'wall'
-WALL_VERTICAL = 'vertical'
-WALL_HORIZONTAL = 'horizontal'
+ACK = 'acknowledgement'
+ACK_VALID = 'valid'
+ACK_INVALID = 'invalid'
 
 
 def protocol_send(cmd, msg):
@@ -73,10 +74,8 @@ def protocol_recv(my_socket):
 
 
 def shape_command(command, value):
-    if command == ID or command == TURN or command == MOVE:
+    if command == ID or command == TURN or command == MOVE or command == WALL or command == ACK:
         ret_val = protocol_send(command, value)
-    elif command == WALL:
-        ret_val = protocol_send(command, value[0] + value[1])
     else:
         ret_val = 'error'
     return ret_val

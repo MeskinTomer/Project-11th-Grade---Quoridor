@@ -35,6 +35,23 @@ PLAYER_RED = 2
 COLS = 9
 ROWS = 9
 
+# Commands
+ID = 'identification'
+ID_ONE = 'player one'
+ID_TWO = 'player two'
+TURN = 'turn'
+YOUR_TURN = 'your turn'
+NOT_YOUR_TURN = 'not your turn'
+MOVE = 'move'
+MOVE_RIGHT = 'right'
+MOVE_LEFT = 'left'
+MOVE_UP = 'up'
+MOVE_DOWN = 'down'
+WALL = 'wall'
+ACK = 'acknowledgement'
+ACK_VALID = 'valid'
+ACK_INVALID = 'invalid'
+
 
 def decide_which_direction(mouse_pos: tuple, player_object: Player, are_adjacent: str, block_array: list) -> str:
     add_right, add_left, add_up, add_down = [0, 0, 0, 0]
@@ -223,3 +240,17 @@ def check_win(player_blue_object: Player, player_red_object: Player) -> str:
     else:
         winner = 'None'
     return winner
+
+
+def calculate_new_mouse_pos(player_red_object: Player, direction):
+    if direction == MOVE_UP:
+        mouse_pos = (player_red_object.x, player_red_object.y - 80)
+    elif direction == MOVE_DOWN:
+        mouse_pos = (player_red_object.x, player_red_object.y + 80)
+    elif direction == MOVE_RIGHT:
+        mouse_pos = (player_red_object.x + 80, player_red_object.y)
+    elif direction == MOVE_LEFT:
+        mouse_pos = (player_red_object.x - 80, player_red_object.y)
+    else:
+        mouse_pos = 'invalid'
+    return mouse_pos
