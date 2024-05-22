@@ -64,7 +64,6 @@ ACK_VALID = 'valid'
 ACK_INVALID = 'invalid'
 
 
-
 def main():
     # Booting up pygame and creating screen
     pygame.init()
@@ -86,6 +85,7 @@ def main():
     player_red_image = pygame.image.load(FILE_PATH_RED_PLAYER).convert()
     player_red_image.set_colorkey(BACKGROUND_COLOR)
     screen.blit(player_red_image, [336, 16])
+
     pygame.display.flip()
 
     # Creating Player objects
@@ -142,10 +142,18 @@ def main():
     except socket.error as err:
         print(err)
 
-    # Setting turns based on ID
+    # Setting ID
     data = protocol_recv(my_socket)
     if data[0] == ID:
         if data[1] == ID_ONE:
+            my_socket.send(shape_command(ACK, ACK_VALID))
+        else:
+            my_socket.send(shape_command(ACK, ACK_VALID))
+
+    # Setting turns
+    data = protocol_recv(my_socket)
+    if data[0] == TURN:
+        if data[1] == YOUR_TURN:
             turn = True
             my_socket.send(shape_command(ACK, ACK_VALID))
         else:
