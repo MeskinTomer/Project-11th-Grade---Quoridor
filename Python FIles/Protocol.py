@@ -5,6 +5,22 @@ Date: 12/05/2024
 
 import socket
 
+# Commands
+ID = 'identification'
+ID_ONE = 'player one'
+ID_TWO = 'player two'
+TURN = 'turn'
+YOUR_TURN = 'your turn'
+NOT_YOUR_TURN = 'not your turn'
+MOVE = 'move'
+MOVE_RIGHT = 'right'
+MOVE_LEFT = 'left'
+MOVE_UP = 'up'
+MOVE_DOWN = 'down'
+WALL = 'wall'
+WALL_VERTICAL = 'vertical'
+WALL_HORIZONTAL = 'horizontal'
+
 
 def protocol_send(cmd, msg):
     """
@@ -54,3 +70,14 @@ def protocol_recv(my_socket):
     except socket.error:
         final_message = ('Error', '')
     return final_message
+
+
+def shape_command(command, value):
+    if command == ID or command == TURN or command == MOVE:
+        ret_val = protocol_send(command, value)
+    elif command == WALL:
+        ret_val = protocol_send(command, value[0] + value[1])
+    else:
+        ret_val = 'error'
+    return ret_val
+

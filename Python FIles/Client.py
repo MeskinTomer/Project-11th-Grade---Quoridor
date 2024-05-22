@@ -12,6 +12,7 @@ from Player import Player
 from Block import Block
 from Wall import Wall
 from datetime import datetime
+import select
 from GameFunctions import *
 from Protocol import *
 
@@ -58,6 +59,9 @@ MOVE_LEFT = 'left'
 MOVE_UP = 'up'
 MOVE_DOWN = 'down'
 WALL = 'wall'
+WALL_VERTICAL = 'vertical'
+WALL_HORIZONTAL = 'horizontal'
+
 
 
 def main():
@@ -129,38 +133,65 @@ def main():
     print(start_time.second)
 
     # Setting turn variable
-    turn = True
+    turn = False
 
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         my_socket.connect((IP, PORT))
     except socket.error as err:
         print(err)
+
+    # Setting turns based on ID
+    data = protocol_recv(my_socket)
+    if data[0] == ID:
+        if data[1] == ID_ONE:
+            turn = True
+        else:
+            turn = False
+
+    inputs = [my_socket]
+    outputs = []
+
     finish = False
     while not finish:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                finish = True
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT:
-                mouse_pos = pygame.mouse.get_pos()
-                side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
-                if side != 'invalid':
-                    if player_turn_id == PLAYER_BLUE:
-                        player_turn_object = player_red_object
-                        player_turn_id = PLAYER_RED
+        if turn:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    finish = True
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT and turn:
+                    mouse_pos = pygame.mouse.get_pos()
+                    side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
+                    if side != 'invalid':
+                        if player_turn_id == PLAYER_BLUE:
+                            player_turn_object = player_red_object
+                            player_turn_id = PLAYER_RED
+                        else:
+                            player_turn_object = player_blue_object
+                            player_turn_id = PLAYER_BLUE
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT and turn:
+                    mouse_pos = pygame.mouse.get_pos()
+                    side = wall_addition_function(mouse_pos, wall_list, blocks_array, screen)
+                    if side != 'invalid':
+                        if player_turn_id == PLAYER_BLUE:
+                            player_turn_object = player_red_object
+                            player_turn_id = PLAYER_RED
+                        else:
+                            player_turn_object = player_blue_object
+                            player_turn_id = PLAYER_BLUE
+        else:
+            readable, writable, exceptional = select.select(inputs, outputs, inputs, 0.1)
+
+            for s in readable:
+                if s is my_socket:
+                    data = protocol_recv(s)
+                    if data:
+                        if data[0] == TURN:
+                            if data[1] == YOUR_TURN:
+                                turn = True
                     else:
-                        player_turn_object = player_blue_object
-                        player_turn_id = PLAYER_BLUE
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT:
-                mouse_pos = pygame.mouse.get_pos()
-                side = wall_addition_function(mouse_pos, wall_list, blocks_array, screen)
-                if side != 'invalid':
-                    if player_turn_id == PLAYER_BLUE:
-                        player_turn_object = player_red_object
-                        player_turn_id = PLAYER_RED
-                    else:
-                        player_turn_object = player_blue_object
-                        player_turn_id = PLAYER_BLUE
+                        print('closed')
+                        finish = True
+
         screen.blit(board, [0, 0])
         screen.blit(player_blue_image, list(player_blue_object.get_coordinates()))
         screen.blit(player_red_image, list(player_red_object.get_coordinates()))

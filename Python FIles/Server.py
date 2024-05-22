@@ -43,6 +43,8 @@ MOVE_DOWN = 'down'
 WALL = 'wall'
 NO_MOVE = 'no move'
 BLANK = ''
+WALL_VERTICAL = 'vertical'
+WALL_HORIZONTAL = 'horizontal'
 
 
 def main():
@@ -78,19 +80,16 @@ def main():
         print("Listening for connections on port %d" % PORT)
 
         client_socket1, client_address1 = server_socket.accept()
-        client_socket2, client_address2 = server_socket.accept()
+        #client_socket2, client_address2 = server_socket.accept()
 
         client_socket1.send(protocol_send(ID, ID_ONE))
-        client_socket2.send(protocol_send(ID, ID_TWO))
+        #client_socket2.send(protocol_send(ID, ID_TWO))
 
         client_socket1.send(protocol_send(TURN, YOUR_TURN))
-        client_socket2.send(protocol_send(TURN, NOT_YOUR_TURN))
+        #client_socket2.send(protocol_send(TURN, NOT_YOUR_TURN))
 
         # Setting the first player to go
         player_turn_id = 1
-
-        finish = False
-        while not finish:
 
 
     except socket.error as err:
