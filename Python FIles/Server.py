@@ -61,6 +61,17 @@ def invert_movement(direction: str):
         ret_val = 'invalid'
     return ret_val
 
+def invert_wall_cords(wall_pos, side):
+    x_wall = wall_pos[0]
+    y_wall = wall_pos[1]
+    if side == 'horizontal':
+        ret_val = (592 - x_wall, 688 - y_wall)
+    elif side == 'vertical':
+        ret_val = (688 - x_wall, 592 - y_wall)
+    else:
+        ret_val = ()
+    return ret_val
+
 
 def add_wall_without_graphics(wall_pos, wall_list, blocks_array, side):
     if side == 'horizontal':
@@ -231,6 +242,8 @@ def main():
                 elif data[0] == WALL:
                     wall_pos = (int(data[1].split(' ')[0]), int(data[1].split(' ')[1]))
                     side = is_trying_to_place_wall(wall_pos)
+                    if player_turn_id == PLAYER_RED:
+                        wall_pos = invert_wall_cords(wall_pos)
                     add_wall_without_graphics(wall_pos, wall_list, blocks_array, side)
                     if side != 'invalid':
                         current_socket.send(shape_command(ACK, ACK_VALID))
