@@ -179,7 +179,7 @@ def add_wall_to_list(wall_list: list, side: str, mouse_pos: tuple, blocks_array:
 
             blocks_array[((y_cord - 16) // 80) + 1][x_cord // 80].update_wall('up')
             blocks_array[((y_cord - 16) // 80) + 1][(x_cord // 80) + 1].update_wall('up')
-    if side == 'vertical':
+    elif side == 'vertical':
         y_cord = mouse_pos[1] // 80 * 80 + 16
         x_cord = (mouse_pos[0] - 16) // 80 * 80 + 64
 
@@ -198,7 +198,10 @@ def add_wall_to_list(wall_list: list, side: str, mouse_pos: tuple, blocks_array:
 
             blocks_array[y_cord // 80][((x_cord - 16) // 80) + 1].update_wall('left')
             blocks_array[(y_cord // 80) + 1][((x_cord - 16) // 80) + 1].update_wall('left')
-    return blocks_array
+    else:
+        x_cord = 0
+        y_cord = 0
+    return blocks_array, x_cord, y_cord
 
 
 def player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object):
@@ -228,8 +231,8 @@ def player_movement_function(mouse_pos, blocks_array, player_turn_id, player_tur
 
 def wall_addition_function(mouse_pos, wall_list, blocks_array, screen):
     side = is_trying_to_place_wall(mouse_pos)
-    blocks_array = add_wall_to_list(wall_list, side, mouse_pos, blocks_array, screen)
-    return side
+    blocks_array, x_cord, y_cord = add_wall_to_list(wall_list, side, mouse_pos, blocks_array, screen)
+    return side, x_cord, y_cord
 
 def check_win(player_blue_object: Player, player_red_object: Player) -> str:
     winner = ''

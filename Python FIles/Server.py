@@ -61,9 +61,10 @@ def invert_movement(direction: str):
         ret_val = 'invalid'
     return ret_val
 
+
 def invert_wall_cords(wall_pos, side):
-    x_wall = wall_pos[0]
-    y_wall = wall_pos[1]
+    x_wall = int(wall_pos[0])
+    y_wall = int(wall_pos[1])
     if side == 'horizontal':
         ret_val = (592 - x_wall, 688 - y_wall)
     elif side == 'vertical':
@@ -162,6 +163,7 @@ def main():
 
         client_socket1.send(shape_command(ID, ID_ONE))
         response = protocol_recv(client_socket1)
+        print('ID 1: ' + response[0] + response[1])
         if response[0] == ACK and response[1] == ACK_VALID:
             pass
         else:
@@ -169,6 +171,7 @@ def main():
 
         client_socket2.send(shape_command(ID, ID_TWO))
         response = protocol_recv(client_socket2)
+        print('ID 2: ' + response[0] + response[1])
         if response[0] == ACK and response[1] == ACK_VALID:
             pass
         else:
@@ -177,6 +180,7 @@ def main():
         # Setting client 2 - not your turn
         client_socket2.send(shape_command(TURN, NOT_YOUR_TURN))
         response = protocol_recv(client_socket2)
+        print('Not Your Turn: ' + response[0] + response[1])
         if response[0] == ACK and response[1] == ACK_VALID:
             pass
         else:
@@ -203,8 +207,16 @@ def main():
         while not finish:
             # Sending updates
             if update:
-                current_socket.send(shape_command(update[0], update[1]))
-                response = protocol_recv(client_socket2)
+                update_data = update[1]
+                if update[0] == MOVE:
+                    update_data = invert_movement(update[1])
+                elif update[0] == WALL:
+                    side_update = is_trying_to_place_wall((int(update[1].split(' ')[0]), int(update[1].split(' ')[1])))
+                    update_data = invert_wall_cords(update[1], side_update)
+                    update_data = str(update_data[0]) + ' ' + str(update_data[1])
+                current_socket.send(shape_command(update[0], update_data))
+                response = protocol_recv(current_socket)
+                print('Update: ' + response[0] + response[1])
                 if response[0] == ACK and response[1] == ACK_VALID:
                     pass
                 else:
@@ -213,7 +225,8 @@ def main():
             # Sending 'Your Turn'
             current_socket.send(shape_command(TURN, YOUR_TURN))
 
-            response = protocol_recv(client_socket2)
+            response = protocol_recv(current_socket)
+            print('Turn: ' + response[0] + response[1])
             if response[0] == ACK and response[1] == ACK_VALID:
                 pass
             else:
@@ -222,6 +235,7 @@ def main():
             # Making requested turn
             data = protocol_recv(current_socket)
             if data:
+                print(data)
                 if data[0] == MOVE:
                     direction = data[1]
                     if player_turn_id == PLAYER_RED:
@@ -233,9 +247,11 @@ def main():
                         update = (data[0], data[1])
                         if player_turn_id == PLAYER_BLUE:
                             player_turn_object = player_red_object
+                            current_socket = client_socket2
                             player_turn_id = PLAYER_RED
                         else:
                             player_turn_object = player_blue_object
+                            current_socket = client_socket1
                             player_turn_id = PLAYER_BLUE
                     else:
                         current_socket.send(shape_command(ACK, ACK_INVALID))
@@ -268,11 +284,6 @@ def main():
                         player_turn_object = player_blue_object
                         current_socket = client_socket1
                         player_turn_id = PLAYER_BLUE
-
-
-
-
-
 
     except socket.error as err:
         print('received socket exception - ' + str(err))

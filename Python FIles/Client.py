@@ -119,10 +119,6 @@ def main():
     blocks_array[player_blue_object.block[0]][player_blue_object.block[1]].update_player(PLAYER_BLUE)
     blocks_array[player_red_object.block[0]][player_red_object.block[1]].update_player(PLAYER_RED)
 
-    # Setting the first player to go
-    player_turn_object = player_blue_object
-    player_turn_id = PLAYER_BLUE
-
     # Setting text box for timer
     font = pygame.font.Font('freesansbold.ttf', 55)
     text = font.render('01:00', True, (0, 255, 0), (0, 0, 128))
@@ -144,6 +140,7 @@ def main():
 
     # Setting ID
     data = protocol_recv(my_socket)
+    print(data)
     if data[0] == ID:
         if data[1] == ID_ONE:
             my_socket.send(shape_command(ACK, ACK_VALID))
@@ -152,12 +149,17 @@ def main():
 
     # Setting turns
     data = protocol_recv(my_socket)
+    print(data)
     if data[0] == TURN:
         if data[1] == YOUR_TURN:
             turn = True
+            player_turn_id = PLAYER_BLUE
+            player_turn_object = player_blue_object
             my_socket.send(shape_command(ACK, ACK_VALID))
         else:
             turn = False
+            player_turn_id = PLAYER_RED
+            player_turn_object = player_red_object
             my_socket.send(shape_command(ACK, ACK_VALID))
 
     inputs = [my_socket]
@@ -174,6 +176,7 @@ def main():
                     side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
                     if side != 'invalid':
                         turn = False
+                        my_socket.send(shape_command(MOVE, side))
                         if player_turn_id == PLAYER_BLUE:
                             player_turn_object = player_red_object
                             player_turn_id = PLAYER_RED
@@ -182,9 +185,10 @@ def main():
                             player_turn_id = PLAYER_BLUE
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT and turn:
                     mouse_pos = pygame.mouse.get_pos()
-                    side = wall_addition_function(mouse_pos, wall_list, blocks_array, screen)
+                    side, x_cord, y_cord = wall_addition_function(mouse_pos, wall_list, blocks_array, screen)
                     if side != 'invalid':
                         turn = False
+                        my_socket.send(shape_command(WALL, str(x_cord) + ' ' + str(y_cord)))
                         if player_turn_id == PLAYER_BLUE:
                             player_turn_object = player_red_object
                             player_turn_id = PLAYER_RED
@@ -192,11 +196,16 @@ def main():
                             player_turn_object = player_blue_object
                             player_turn_id = PLAYER_BLUE
         else:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    finish = True
+
             readable, writable, exceptional = select.select(inputs, outputs, inputs, 0.1)
 
             for s in readable:
                 if s is my_socket:
                     data = protocol_recv(s)
+                    print(data)
                     if data:
                         print(data)
                         if data[0] == TURN:
@@ -212,12 +221,15 @@ def main():
                                 my_socket.send(shape_command(ACK, ACK_VALID))
                         elif data[0] == MOVE:
                             mouse_pos = calculate_new_mouse_pos(player_red_object, data[1])
+                            print(mouse_pos)
                             side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
+                            print(side)
                             if side != 'invalid':
                                 my_socket.send(shape_command(ACK, ACK_VALID))
                         elif data[0] == WALL:
                             wall_pos = (int(data[1].split(' ')[0]), int(data[1].split(' ')[1]))
-                            side = wall_addition_function(wall_pos, wall_list, blocks_array, screen)
+                            side = wall_addition_function(wall_pos, wall_list, blocks_array, screen)[0]
+                            print('Side: ' + side)
                             if side != 'invalid':
                                 my_socket.send(shape_command(ACK, ACK_VALID))
 
