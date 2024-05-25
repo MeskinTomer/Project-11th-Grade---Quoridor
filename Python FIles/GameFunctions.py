@@ -108,6 +108,7 @@ def are_players_adjacent(player_blue_object: Player, player_red_object: Player, 
     else:
         x_difference = red_coordinates[1] - blue_coordinates[1]
         y_difference = red_coordinates[0] - blue_coordinates[0]
+
     if x_difference == 1 and blue_coordinates[0] == red_coordinates[0]:
         side = 'left'
     elif x_difference == -1 and blue_coordinates[0] == red_coordinates[0]:
@@ -245,15 +246,28 @@ def check_win(player_blue_object: Player, player_red_object: Player) -> str:
     return winner
 
 
-def calculate_new_mouse_pos(player_red_object: Player, direction):
+def calculate_new_mouse_pos(player_object: Player, player_blue_object: Player, player_red_object: Player, turn: int, direction):
+    are_adjacent = are_players_adjacent(player_blue_object, player_red_object, turn)
+
+    add_right, add_left, add_up, add_down = [0, 0, 0, 0]
+    if are_adjacent != 'not adjacent':
+        if are_adjacent == 'right':
+            add_right += 80
+        elif are_adjacent == 'left':
+            add_left -= 80
+        elif are_adjacent == 'down':
+            add_down += 80
+        elif are_adjacent == 'up':
+            add_up -= 80
+
     if direction == MOVE_UP:
-        mouse_pos = (player_red_object.x, player_red_object.y - 80)
+        mouse_pos = (player_object.x, player_object.y - 80 + add_up)
     elif direction == MOVE_DOWN:
-        mouse_pos = (player_red_object.x, player_red_object.y + 80)
+        mouse_pos = (player_object.x, player_object.y + 80 + add_down)
     elif direction == MOVE_RIGHT:
-        mouse_pos = (player_red_object.x + 80, player_red_object.y)
+        mouse_pos = (player_object.x + 80, player_object.y + add_right)
     elif direction == MOVE_LEFT:
-        mouse_pos = (player_red_object.x - 80, player_red_object.y)
+        mouse_pos = (player_object.x - 80, player_object.y + add_left)
     else:
         mouse_pos = 'invalid'
     return mouse_pos

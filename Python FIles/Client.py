@@ -220,7 +220,7 @@ def main():
                                 player_turn_id = PLAYER_RED
                                 my_socket.send(shape_command(ACK, ACK_VALID))
                         elif data[0] == MOVE:
-                            mouse_pos = calculate_new_mouse_pos(player_red_object, data[1])
+                            mouse_pos = calculate_new_mouse_pos(player_red_object, player_blue_object, player_red_object, player_turn_id, data[1])
                             print(mouse_pos)
                             side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
                             print(side)

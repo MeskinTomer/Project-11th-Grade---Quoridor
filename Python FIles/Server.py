@@ -241,7 +241,8 @@ def main():
                     direction = data[1]
                     if player_turn_id == PLAYER_RED:
                         direction = invert_movement(direction)
-                    mouse_pos = calculate_new_mouse_pos(player_turn_object, direction)
+                    mouse_pos = calculate_new_mouse_pos(player_turn_object, player_blue_object, player_red_object, player_turn_id, direction)
+                    print(mouse_pos)
                     side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
                     if side != 'invalid':
                         current_socket.send(shape_command(ACK, ACK_VALID))
