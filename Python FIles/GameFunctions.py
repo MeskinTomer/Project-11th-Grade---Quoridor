@@ -6,6 +6,7 @@ Date: 24/04/2024
 # Imports
 import pygame
 import os
+import datetime
 from Player import Player
 from Wall import Wall
 
@@ -48,6 +49,8 @@ MOVE_LEFT = 'left'
 MOVE_UP = 'up'
 MOVE_DOWN = 'down'
 WALL = 'wall'
+NO_MOVE = 'no move'
+BLANK = ''
 ACK = 'acknowledgement'
 ACK_VALID = 'valid'
 ACK_INVALID = 'invalid'
@@ -271,3 +274,16 @@ def calculate_new_mouse_pos(player_object: Player, player_blue_object: Player, p
     else:
         mouse_pos = 'invalid'
     return mouse_pos
+
+
+def update_timer(start_time, end_seconds_amount):
+    end_time = start_time + datetime.timedelta(seconds=end_seconds_amount)
+    current_time = datetime.datetime.now()
+    elapsed_time = end_time - current_time
+    elapsed_seconds = int(elapsed_time.total_seconds())
+
+    ret_val = ['not end', elapsed_seconds]
+
+    if elapsed_seconds <= 0:
+        ret_val = ['end', end_seconds_amount]
+    return ret_val

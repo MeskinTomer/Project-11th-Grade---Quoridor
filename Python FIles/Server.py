@@ -7,11 +7,10 @@ Date: 12/5/2024
 import socket
 import pygame
 import os
-import time
+import datetime
 from Player import Player
 from Block import Block
 from Wall import Wall
-from datetime import datetime
 from GameFunctions import *
 from Protocol import *
 
@@ -278,6 +277,7 @@ def main():
                         current_socket.send(shape_command(ACK, ACK_INVALID))
                 elif data[0] == NO_MOVE:
                     current_socket.send(shape_command(ACK, ACK_VALID))
+                    update = (data[0], data[1])
                     if player_turn_id == PLAYER_BLUE:
                         player_turn_object = player_red_object
                         current_socket = client_socket2
@@ -286,6 +286,21 @@ def main():
                         player_turn_object = player_blue_object
                         current_socket = client_socket1
                         player_turn_id = PLAYER_BLUE
+
+            # Check if someone won the game
+            winner = check_win(player_blue_object, player_red_object)
+            if winner != 'None':
+                for i in range(ROWS):
+                    for j in range(COLS):
+                        blocks_array[i][j].restart_block()
+
+                player_blue_object.restart('blue')
+                player_red_object.restart('red')
+
+                blocks_array[player_blue_object.block[0]][player_blue_object.block[1]].update_player(PLAYER_BLUE)
+                blocks_array[player_red_object.block[0]][player_red_object.block[1]].update_player(PLAYER_RED)
+
+                wall_list.clear()
 
     except socket.error as err:
         print('received socket exception - ' + str(err))

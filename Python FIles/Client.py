@@ -7,11 +7,11 @@ Date: 24/04/2024
 import pygame
 import socket
 import os
-import time
+import datetime
 from Player import Player
 from Block import Block
 from Wall import Wall
-from datetime import datetime
+import time
 import select
 from GameFunctions import *
 from Protocol import *
@@ -29,11 +29,14 @@ BACKGROUND_COLOR = (56, 228, 129)
 # Files Constants
 FILE_PATH_CURRENT = os.path.dirname(__file__)
 FILE_PATH_IMAGES_FOLDER = os.path.join(FILE_PATH_CURRENT, '..', 'Images')
+FILE_PATH_FONTS_FOLDER = os.path.join(FILE_PATH_CURRENT, '..', 'Fonts')
 FILE_PATH_BOARD = os.path.join(FILE_PATH_IMAGES_FOLDER, 'quoridor_board.png')
 FILE_PATH_BLUE_PLAYER = os.path.join(FILE_PATH_IMAGES_FOLDER, 'player_blue.png')
 FILE_PATH_RED_PLAYER = os.path.join(FILE_PATH_IMAGES_FOLDER, 'player_red.png')
 FILE_PATH_WALL_HORIZONTAL = os.path.join(FILE_PATH_IMAGES_FOLDER, 'wall_horizontal.png')
 FILE_PATH_WALL_VERTICAL = os.path.join(FILE_PATH_IMAGES_FOLDER, 'wall_vertical.png')
+FILE_PATH_FONT_TIMER = os.path.join(FILE_PATH_FONTS_FOLDER, 'Teko-VariableFont_wght.ttf')
+
 
 # Game Constants
 PLAYER_NONE = 0
@@ -59,6 +62,8 @@ MOVE_LEFT = 'left'
 MOVE_UP = 'up'
 MOVE_DOWN = 'down'
 WALL = 'wall'
+NO_MOVE = 'no move'
+BLANK = ''
 ACK = 'acknowledgement'
 ACK_VALID = 'valid'
 ACK_INVALID = 'invalid'
@@ -120,14 +125,10 @@ def main():
     blocks_array[player_red_object.block[0]][player_red_object.block[1]].update_player(PLAYER_RED)
 
     # Setting text box for timer
-    font = pygame.font.Font('freesansbold.ttf', 55)
-    text = font.render('01:00', True, (0, 255, 0), (0, 0, 128))
+    font = pygame.font.Font(FILE_PATH_FONT_TIMER, 140)
+    text = font.render('01:00', True, (218, 68, 71), (67, 33, 57))
     text_object = text.get_rect()
-    text_object.center = (800, 150)
-
-    # Setting timer
-    start_time = datetime.now().time()
-    print(start_time.second)
+    text_object.center = (866, 207)
 
     # Setting turn variable
     turn = False
@@ -165,9 +166,31 @@ def main():
     inputs = [my_socket]
     outputs = []
 
+    # Setting timer
+    start_time = datetime.datetime.now()
+    current_seconds = 0
+
     finish = False
     while not finish:
         if turn:
+            timer_list = update_timer(start_time, 60)
+            if timer_list[0] == 'not end':
+                if current_seconds != timer_list[1]:
+                    current_seconds = timer_list[1]
+                    text = font.render('00:' + str(current_seconds), True, (218, 68, 71), (67, 33, 57))
+                    text_object = text.get_rect()
+                    text_object.center = (866, 207)
+            elif timer_list[0] == 'end':
+                start_time = datetime.datetime.now()
+                turn = False
+                player_turn_object = player_red_object
+                player_turn_id = PLAYER_RED
+                my_socket.send(shape_command(NO_MOVE, ''))
+
+                text = font.render('01:00', True, (218, 68, 71), (67, 33, 57))
+                text_object = text.get_rect()
+                text_object.center = (866, 207)
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     finish = True
@@ -176,6 +199,11 @@ def main():
                     side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
                     if side != 'invalid':
                         turn = False
+
+                        text = font.render('01:00', True, (218, 68, 71), (67, 33, 57))
+                        text_object = text.get_rect()
+                        text_object.center = (866, 207)
+
                         my_socket.send(shape_command(MOVE, side))
                         if player_turn_id == PLAYER_BLUE:
                             player_turn_object = player_red_object
@@ -188,6 +216,11 @@ def main():
                     side, x_cord, y_cord = wall_addition_function(mouse_pos, wall_list, blocks_array, screen)
                     if side != 'invalid':
                         turn = False
+
+                        text = font.render('01:00', True, (218, 68, 71), (67, 33, 57))
+                        text_object = text.get_rect()
+                        text_object.center = (866, 207)
+
                         my_socket.send(shape_command(WALL, str(x_cord) + ' ' + str(y_cord)))
                         if player_turn_id == PLAYER_BLUE:
                             player_turn_object = player_red_object
@@ -214,6 +247,11 @@ def main():
                                 player_turn_object = player_blue_object
                                 player_turn_id = PLAYER_BLUE
                                 my_socket.send(shape_command(ACK, ACK_VALID))
+
+                                # Setting timer
+                                start_time = datetime.datetime.now()
+                                current_seconds = 0
+
                             elif data[1] == NOT_YOUR_TURN:
                                 turn = False
                                 player_turn_object = player_red_object
@@ -232,6 +270,9 @@ def main():
                             print('Side: ' + side)
                             if side != 'invalid':
                                 my_socket.send(shape_command(ACK, ACK_VALID))
+                        elif data[0] == NO_MOVE:
+                            print('No Move')
+                            my_socket.send(shape_command(ACK, ACK_VALID))
 
                     else:
                         print('closed')
