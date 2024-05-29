@@ -203,6 +203,9 @@ def main():
         # Setting update variable
         update = ()
 
+        # Setting Scoreboard
+        score = [0, 0]
+
         finish = False
         while not finish:
             # Sending updates
@@ -290,6 +293,11 @@ def main():
             # Check if someone won the game
             winner = check_win(player_blue_object, player_red_object)
             if winner != 'None':
+                if winner == 'blue':
+                    score[0] += 1
+                else:
+                    score[1] += 1
+
                 for i in range(ROWS):
                     for j in range(COLS):
                         blocks_array[i][j].restart_block()

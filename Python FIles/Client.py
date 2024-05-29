@@ -124,11 +124,25 @@ def main():
     blocks_array[player_blue_object.block[0]][player_blue_object.block[1]].update_player(PLAYER_BLUE)
     blocks_array[player_red_object.block[0]][player_red_object.block[1]].update_player(PLAYER_RED)
 
+    # Setting Fonts
+    font_1 = pygame.font.Font(FILE_PATH_FONT_TIMER, 140)
+    font_your_turn = pygame.font.Font(FILE_PATH_FONT_TIMER, 100)
+    font_not_your_turn = pygame.font.Font(FILE_PATH_FONT_TIMER, 90)
+
     # Setting text box for timer
-    font = pygame.font.Font(FILE_PATH_FONT_TIMER, 140)
-    text = font.render('01:00', True, (218, 68, 71), (67, 33, 57))
-    text_object = text.get_rect()
-    text_object.center = (866, 207)
+    timer_text = font_1.render('01:00', True, (218, 68, 71), (67, 33, 57))
+    timer_text_object = timer_text.get_rect()
+    timer_text_object.center = (866, 207)
+
+    # Setting text box for Scoreboard
+    scoreboard_text = font_1.render('0 - 0', True, (218, 68, 71), (67, 33, 57))
+    scoreboard_text_object = scoreboard_text.get_rect()
+    scoreboard_text_object.center = (866, 507)
+
+    # Setting text box for Turns
+    turn_text = font_your_turn.render('Your Turn', True, (218, 68, 71), (67, 33, 57))
+    turn_text_object = turn_text.get_rect()
+    turn_text_object.center = (866, 357)
 
     # Setting turn variable
     turn = False
@@ -166,6 +180,9 @@ def main():
     inputs = [my_socket]
     outputs = []
 
+    # Setting Scoreboard
+    score = [0, 0]
+
     # Setting timer
     start_time = datetime.datetime.now()
     current_seconds = 0
@@ -174,12 +191,17 @@ def main():
     while not finish:
         if turn:
             timer_list = update_timer(start_time, 60)
+
+            turn_text = font_your_turn.render('Your Turn', True, (153, 229, 80), (67, 33, 57))
+            turn_text_object = turn_text.get_rect()
+            turn_text_object.center = (866, 357)
+
             if timer_list[0] == 'not end':
                 if current_seconds != timer_list[1]:
                     current_seconds = timer_list[1]
-                    text = font.render('00:' + str(current_seconds), True, (218, 68, 71), (67, 33, 57))
-                    text_object = text.get_rect()
-                    text_object.center = (866, 207)
+                    timer_text = font_1.render('00:' + str(current_seconds), True, (218, 68, 71), (67, 33, 57))
+                    timer_text_object = timer_text.get_rect()
+                    timer_text_object.center = (866, 207)
             elif timer_list[0] == 'end':
                 start_time = datetime.datetime.now()
                 turn = False
@@ -187,9 +209,9 @@ def main():
                 player_turn_id = PLAYER_RED
                 my_socket.send(shape_command(NO_MOVE, ''))
 
-                text = font.render('01:00', True, (218, 68, 71), (67, 33, 57))
-                text_object = text.get_rect()
-                text_object.center = (866, 207)
+                timer_text = font_1.render('01:00', True, (218, 68, 71), (67, 33, 57))
+                timer_text_object = timer_text.get_rect()
+                timer_text_object.center = (866, 207)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -200,9 +222,9 @@ def main():
                     if side != 'invalid':
                         turn = False
 
-                        text = font.render('01:00', True, (218, 68, 71), (67, 33, 57))
-                        text_object = text.get_rect()
-                        text_object.center = (866, 207)
+                        timer_text = font_1.render('01:00', True, (218, 68, 71), (67, 33, 57))
+                        timer_text_object = timer_text.get_rect()
+                        timer_text_object.center = (866, 207)
 
                         my_socket.send(shape_command(MOVE, side))
                         if player_turn_id == PLAYER_BLUE:
@@ -217,9 +239,9 @@ def main():
                     if side != 'invalid':
                         turn = False
 
-                        text = font.render('01:00', True, (218, 68, 71), (67, 33, 57))
-                        text_object = text.get_rect()
-                        text_object.center = (866, 207)
+                        timer_text = font_1.render('01:00', True, (218, 68, 71), (67, 33, 57))
+                        timer_text_object = timer_text.get_rect()
+                        timer_text_object.center = (866, 207)
 
                         my_socket.send(shape_command(WALL, str(x_cord) + ' ' + str(y_cord)))
                         if player_turn_id == PLAYER_BLUE:
@@ -232,6 +254,10 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     finish = True
+
+            turn_text = font_not_your_turn.render('Not Your Turn', True, (218, 68, 71), (67, 33, 57))
+            turn_text_object = turn_text.get_rect()
+            turn_text_object.center = (866, 357)
 
             readable, writable, exceptional = select.select(inputs, outputs, inputs, 0.1)
 
@@ -281,7 +307,9 @@ def main():
         screen.blit(board, [0, 0])
         screen.blit(player_blue_image, list(player_blue_object.get_coordinates()))
         screen.blit(player_red_image, list(player_red_object.get_coordinates()))
-        screen.blit(text, text_object)
+        screen.blit(timer_text, timer_text_object)
+        screen.blit(scoreboard_text, scoreboard_text_object)
+        screen.blit(turn_text, turn_text_object)
         for wall_object in wall_list:
             if wall_object.side == 'horizontal':
                 screen.blit(wall_horizontal_image, list(wall_object.get_coordinates()))
@@ -293,6 +321,15 @@ def main():
         # Check if someone won the game
         winner = check_win(player_blue_object, player_red_object)
         if winner != 'None':
+            if winner == 'blue':
+                score[0] += 1
+            else:
+                score[1] += 1
+
+            scoreboard_text = font_1.render(str(score[0]) + ' - ' + str(score[1]), True, (218, 68, 71), (67, 33, 57))
+            scoreboard_text_object = scoreboard_text.get_rect()
+            scoreboard_text_object.center = (866, 507)
+
             time.sleep(5)
 
             for i in range(ROWS):
@@ -308,7 +345,7 @@ def main():
             wall_list.clear()
 
     pygame.quit()
-
+    
 
 if __name__ == '__main__':
     main()
