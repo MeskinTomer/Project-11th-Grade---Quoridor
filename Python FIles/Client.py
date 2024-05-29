@@ -113,9 +113,8 @@ def main():
 
     # Creating 2D array for representation of board
     blocks_array = [[Block for _ in range(COLS)] for _ in range(ROWS)]
-    x_block = 16
-    y_block = 16
 
+    y_block = 16
     # Setting coordinates for the Blocks in the board
     for i in range(ROWS):
         x_block = 16
@@ -173,6 +172,9 @@ def main():
             my_socket.send(shape_command(ACK, ACK_VALID))
 
     # Setting turns
+    player_turn_id = 0
+    player_turn_object = player_blue_object
+
     data = protocol_recv(my_socket)
     print(data)
     if data[0] == TURN:
@@ -343,9 +345,9 @@ def main():
                 score[1] += 1
 
                 win_text = font_win.render('Red Scored', True, (218, 68, 71), (67, 33, 57))
-                win_text_object = win_text.get_rect()
-                win_text_object.center = (512, 360)
 
+            win_text_object = win_text.get_rect()
+            win_text_object.center = (512, 360)
             screen.blit(win_text, win_text_object)
 
             scoreboard_text = font_timer_scoreboard.render(str(score[0]) + ' - ' + str(score[1]), True, (218, 68, 71), (67, 33, 57))
@@ -357,7 +359,7 @@ def main():
 
             time.sleep(5)
 
-
+            scoreboard_text_object.center = (866, 507)
 
             for i in range(ROWS):
                 for j in range(COLS):

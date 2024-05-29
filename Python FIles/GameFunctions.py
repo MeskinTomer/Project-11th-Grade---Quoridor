@@ -164,7 +164,7 @@ def is_trying_to_place_wall(mouse_pos: tuple) -> str:
     return ret_val
 
 
-def add_wall_to_list(wall_list: list, side: str, mouse_pos: tuple, blocks_array: list, screen: pygame.display) -> list:
+def add_wall_to_list(wall_list: list, side: str, mouse_pos: tuple, blocks_array: list, screen: pygame.display) -> tuple:
     if side == 'horizontal':
         x_cord = mouse_pos[0] // 80 * 80 + 16
         y_cord = (mouse_pos[1] - 16) // 80 * 80 + 64

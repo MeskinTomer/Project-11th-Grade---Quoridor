@@ -34,4 +34,3 @@ class Block:
         self.down = 'clear'
         self.right = 'clear'
         self.left = 'clear'
-

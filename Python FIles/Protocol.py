@@ -81,4 +81,3 @@ def shape_command(command, value):
     else:
         ret_val = 'error'
     return ret_val
-
