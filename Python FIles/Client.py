@@ -31,11 +31,12 @@ FILE_PATH_CURRENT = os.path.dirname(__file__)
 FILE_PATH_IMAGES_FOLDER = os.path.join(FILE_PATH_CURRENT, '..', 'Images')
 FILE_PATH_FONTS_FOLDER = os.path.join(FILE_PATH_CURRENT, '..', 'Fonts')
 FILE_PATH_BOARD = os.path.join(FILE_PATH_IMAGES_FOLDER, 'quoridor_board.png')
+FILE_PATH_BOARD_BLANK = os.path.join(FILE_PATH_IMAGES_FOLDER, 'quoridor_board_blank.png')
 FILE_PATH_BLUE_PLAYER = os.path.join(FILE_PATH_IMAGES_FOLDER, 'player_blue.png')
 FILE_PATH_RED_PLAYER = os.path.join(FILE_PATH_IMAGES_FOLDER, 'player_red.png')
 FILE_PATH_WALL_HORIZONTAL = os.path.join(FILE_PATH_IMAGES_FOLDER, 'wall_horizontal.png')
 FILE_PATH_WALL_VERTICAL = os.path.join(FILE_PATH_IMAGES_FOLDER, 'wall_vertical.png')
-FILE_PATH_FONT_TIMER = os.path.join(FILE_PATH_FONTS_FOLDER, 'Teko-VariableFont_wght.ttf')
+FILE_PATH_FONT = os.path.join(FILE_PATH_FONTS_FOLDER, 'Teko-VariableFont_wght.ttf')
 
 
 # Game Constants
@@ -81,6 +82,9 @@ def main():
     board = pygame.image.load(FILE_PATH_BOARD)
     screen.blit(board, (0, 0))
 
+    # Loading Blank Board
+    blank_board = pygame.image.load(FILE_PATH_BOARD_BLANK)
+
     # Drawing blue player
     player_blue_image = pygame.image.load(FILE_PATH_BLUE_PLAYER).convert()
     player_blue_image.set_colorkey(BACKGROUND_COLOR)
@@ -125,17 +129,18 @@ def main():
     blocks_array[player_red_object.block[0]][player_red_object.block[1]].update_player(PLAYER_RED)
 
     # Setting Fonts
-    font_1 = pygame.font.Font(FILE_PATH_FONT_TIMER, 140)
-    font_your_turn = pygame.font.Font(FILE_PATH_FONT_TIMER, 100)
-    font_not_your_turn = pygame.font.Font(FILE_PATH_FONT_TIMER, 90)
+    font_timer_scoreboard = pygame.font.Font(FILE_PATH_FONT, 140)
+    font_your_turn = pygame.font.Font(FILE_PATH_FONT, 100)
+    font_not_your_turn = pygame.font.Font(FILE_PATH_FONT, 90)
+    font_win = pygame.font.Font(FILE_PATH_FONT, 270)
 
     # Setting text box for timer
-    timer_text = font_1.render('01:00', True, (218, 68, 71), (67, 33, 57))
+    timer_text = font_timer_scoreboard.render('01:00', True, (218, 68, 71), (67, 33, 57))
     timer_text_object = timer_text.get_rect()
     timer_text_object.center = (866, 207)
 
     # Setting text box for Scoreboard
-    scoreboard_text = font_1.render('0 - 0', True, (218, 68, 71), (67, 33, 57))
+    scoreboard_text = font_timer_scoreboard.render('0 - 0', True, (218, 68, 71), (67, 33, 57))
     scoreboard_text_object = scoreboard_text.get_rect()
     scoreboard_text_object.center = (866, 507)
 
@@ -143,6 +148,11 @@ def main():
     turn_text = font_your_turn.render('Your Turn', True, (218, 68, 71), (67, 33, 57))
     turn_text_object = turn_text.get_rect()
     turn_text_object.center = (866, 357)
+
+    # Setting text box for Winning Screen
+    win_text = font_win.render('You Scored', True, (218, 68, 71), (67, 33, 57))
+    win_text_object = win_text.get_rect()
+    win_text_object.center = (512, 360)
 
     # Setting turn variable
     turn = False
@@ -199,7 +209,7 @@ def main():
             if timer_list[0] == 'not end':
                 if current_seconds != timer_list[1]:
                     current_seconds = timer_list[1]
-                    timer_text = font_1.render('00:' + str(current_seconds), True, (218, 68, 71), (67, 33, 57))
+                    timer_text = font_timer_scoreboard.render('00:' + str(current_seconds), True, (218, 68, 71), (67, 33, 57))
                     timer_text_object = timer_text.get_rect()
                     timer_text_object.center = (866, 207)
             elif timer_list[0] == 'end':
@@ -209,7 +219,7 @@ def main():
                 player_turn_id = PLAYER_RED
                 my_socket.send(shape_command(NO_MOVE, ''))
 
-                timer_text = font_1.render('01:00', True, (218, 68, 71), (67, 33, 57))
+                timer_text = font_timer_scoreboard.render('01:00', True, (218, 68, 71), (67, 33, 57))
                 timer_text_object = timer_text.get_rect()
                 timer_text_object.center = (866, 207)
 
@@ -222,7 +232,7 @@ def main():
                     if side != 'invalid':
                         turn = False
 
-                        timer_text = font_1.render('01:00', True, (218, 68, 71), (67, 33, 57))
+                        timer_text = font_timer_scoreboard.render('01:00', True, (218, 68, 71), (67, 33, 57))
                         timer_text_object = timer_text.get_rect()
                         timer_text_object.center = (866, 207)
 
@@ -239,7 +249,7 @@ def main():
                     if side != 'invalid':
                         turn = False
 
-                        timer_text = font_1.render('01:00', True, (218, 68, 71), (67, 33, 57))
+                        timer_text = font_timer_scoreboard.render('01:00', True, (218, 68, 71), (67, 33, 57))
                         timer_text_object = timer_text.get_rect()
                         timer_text_object.center = (866, 207)
 
@@ -321,16 +331,33 @@ def main():
         # Check if someone won the game
         winner = check_win(player_blue_object, player_red_object)
         if winner != 'None':
+            screen.blit(blank_board, [0, 0])
+
             if winner == 'blue':
                 score[0] += 1
+
+                win_text = font_win.render('Blue Scored', True, (72, 114, 206), (67, 33, 57))
+                win_text_object = win_text.get_rect()
+                win_text_object.center = (512, 360)
             else:
                 score[1] += 1
 
-            scoreboard_text = font_1.render(str(score[0]) + ' - ' + str(score[1]), True, (218, 68, 71), (67, 33, 57))
+                win_text = font_win.render('Red Scored', True, (218, 68, 71), (67, 33, 57))
+                win_text_object = win_text.get_rect()
+                win_text_object.center = (512, 360)
+
+            screen.blit(win_text, win_text_object)
+
+            scoreboard_text = font_timer_scoreboard.render(str(score[0]) + ' - ' + str(score[1]), True, (218, 68, 71), (67, 33, 57))
             scoreboard_text_object = scoreboard_text.get_rect()
-            scoreboard_text_object.center = (866, 507)
+            scoreboard_text_object.center = (512, 550)
+            screen.blit(scoreboard_text, scoreboard_text_object)
+
+            pygame.display.flip()
 
             time.sleep(5)
+
+
 
             for i in range(ROWS):
                 for j in range(COLS):
