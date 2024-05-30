@@ -57,6 +57,7 @@ log_file = os.path.join(FILE_PATH_LOGS_FOLDER, 'Server.log')
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s', handlers=[
                                                             logging.FileHandler(log_file), logging.StreamHandler()])
 
+
 def invert_movement(direction: str):
     if direction == MOVE_UP:
         ret_val = MOVE_DOWN
@@ -144,10 +145,9 @@ def main():
     wall_list = []
 
     # Creating 2D array for representation of board
-    blocks_array = [[Block for _ in range(COLS)] for _ in range(ROWS)]
-    x_block = 16
-    y_block = 16
+    blocks_array = [[Block(0, 0) for _ in range(COLS)] for _ in range(ROWS)]
 
+    y_block = 16
     # Setting coordinates for the Blocks in the board
     for i in range(ROWS):
         x_block = 16
@@ -162,6 +162,12 @@ def main():
 
     # Setting up server and clients sockets
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Setting variables
+    player_turn_id = 0
+    client_socket1 = socket
+    client_socket2 = socket
+
     try:
         server_socket.bind((IP, PORT))
         server_socket.listen(QUEUE_SIZE)
@@ -219,7 +225,8 @@ def main():
                     if update[0] == MOVE:
                         update_data = invert_movement(update[1])
                     elif update[0] == WALL:
-                        side_update = is_trying_to_place_wall((int(update[1].split(' ')[0]), int(update[1].split(' ')[1])))
+                        side_update = is_trying_to_place_wall((int(update[1].split(' ')[0]),
+                                                               int(update[1].split(' ')[1])))
                         update_data = invert_wall_cords(update[1], side_update)
                         update_data = str(update_data[0]) + ' ' + str(update_data[1])
                     current_socket.send(shape_command(update[0], update_data))
@@ -248,9 +255,11 @@ def main():
                         direction = data[1]
                         if player_turn_id == PLAYER_RED:
                             direction = invert_movement(direction)
-                        mouse_pos = calculate_new_mouse_pos(player_turn_object, player_blue_object, player_red_object, player_turn_id, direction)
+                        mouse_pos = calculate_new_mouse_pos(player_turn_object, player_blue_object,
+                                                            player_red_object, player_turn_id, direction)
                         logging.info(mouse_pos)
-                        side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
+                        side = player_movement_function(mouse_pos, blocks_array, player_turn_id,
+                                                        player_turn_object, player_blue_object, player_red_object)
                         if side != 'invalid':
                             current_socket.send(shape_command(ACK, ACK_VALID))
                             update = (data[0], data[1])

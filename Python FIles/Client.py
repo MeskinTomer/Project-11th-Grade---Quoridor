@@ -8,12 +8,12 @@ import pygame
 import socket
 import os
 import datetime
-from Player import Player
-from Block import Block
-from Wall import Wall
 import time
 import select
 import logging
+from Player import Player
+from Block import Block
+from Wall import Wall
 from GameFunctions import *
 from Protocol import *
 
@@ -120,7 +120,7 @@ def main():
     wall_list = []
 
     # Creating 2D array for representation of board
-    blocks_array = [[Block for _ in range(COLS)] for _ in range(ROWS)]
+    blocks_array = [[Block(0, 0) for _ in range(COLS)] for _ in range(ROWS)]
 
     y_block = 16
     # Setting coordinates for the Blocks in the board
@@ -219,7 +219,8 @@ def main():
             if timer_list[0] == 'not end':
                 if current_seconds != timer_list[1]:
                     current_seconds = timer_list[1]
-                    timer_text = font_timer_scoreboard.render('00:' + str(current_seconds), True, (218, 68, 71), (67, 33, 57))
+                    timer_text = font_timer_scoreboard.render('00:' + str(current_seconds), True,
+                                                              (218, 68, 71), (67, 33, 57))
                     timer_text_object = timer_text.get_rect()
                     timer_text_object.center = (866, 207)
             elif timer_list[0] == 'end':
@@ -229,7 +230,8 @@ def main():
                 player_turn_id = PLAYER_RED
                 my_socket.send(shape_command(NO_MOVE, ''))
 
-                timer_text = font_timer_scoreboard.render('01:00', True, (218, 68, 71), (67, 33, 57))
+                timer_text = font_timer_scoreboard.render('01:00', True,
+                                                          (218, 68, 71), (67, 33, 57))
                 timer_text_object = timer_text.get_rect()
                 timer_text_object.center = (866, 207)
 
@@ -239,11 +241,13 @@ def main():
                     my_socket.send(shape_command(DISCONNECT, BLANK))
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT and turn:
                     mouse_pos = pygame.mouse.get_pos()
-                    side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
+                    side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object,
+                                                    player_blue_object, player_red_object)
                     if side != 'invalid':
                         turn = False
 
-                        timer_text = font_timer_scoreboard.render('01:00', True, (218, 68, 71), (67, 33, 57))
+                        timer_text = font_timer_scoreboard.render('01:00', True,
+                                                                  (218, 68, 71), (67, 33, 57))
                         timer_text_object = timer_text.get_rect()
                         timer_text_object.center = (866, 207)
 
@@ -260,7 +264,8 @@ def main():
                     if side != 'invalid':
                         turn = False
 
-                        timer_text = font_timer_scoreboard.render('01:00', True, (218, 68, 71), (67, 33, 57))
+                        timer_text = font_timer_scoreboard.render('01:00', True,
+                                                                  (218, 68, 71), (67, 33, 57))
                         timer_text_object = timer_text.get_rect()
                         timer_text_object.center = (866, 207)
 
@@ -276,7 +281,8 @@ def main():
                 if event.type == pygame.QUIT:
                     finish = True
 
-            turn_text = font_not_your_turn.render('Not Your Turn', True, (218, 68, 71), (67, 33, 57))
+            turn_text = font_not_your_turn.render('Not Your Turn', True,
+                                                  (218, 68, 71), (67, 33, 57))
             turn_text_object = turn_text.get_rect()
             turn_text_object.center = (866, 357)
 
@@ -304,8 +310,10 @@ def main():
                                 player_turn_id = PLAYER_RED
                                 my_socket.send(shape_command(ACK, ACK_VALID))
                         elif data[0] == MOVE:
-                            mouse_pos = calculate_new_mouse_pos(player_red_object, player_blue_object, player_red_object, player_turn_id, data[1])
-                            side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
+                            mouse_pos = calculate_new_mouse_pos(player_red_object, player_blue_object,
+                                                                player_red_object, player_turn_id, data[1])
+                            side = player_movement_function(mouse_pos, blocks_array, player_turn_id,
+                                                            player_turn_object, player_blue_object, player_red_object)
                             logging.info(side)
                             if side != 'invalid':
                                 my_socket.send(shape_command(ACK, ACK_VALID))
@@ -323,7 +331,8 @@ def main():
                             finish = True
 
                             screen.blit(blank_board, [0, 0])
-                            win_text = font_timer_scoreboard.render('Red Player Disconnected', True, (72, 114, 206), (67, 33, 57))
+                            win_text = font_timer_scoreboard.render('Red Player Disconnected', True,
+                                                                    (72, 114, 206), (67, 33, 57))
                             win_text_object = win_text.get_rect()
                             win_text_object.center = (512, 360)
                             screen.blit(win_text, win_text_object)
@@ -375,7 +384,8 @@ def main():
             win_text_object.center = (512, 360)
             screen.blit(win_text, win_text_object)
 
-            scoreboard_text = font_timer_scoreboard.render(str(score[0]) + ' - ' + str(score[1]), True, (218, 68, 71), (67, 33, 57))
+            scoreboard_text = font_timer_scoreboard.render(str(score[0]) + ' - ' + str(score[1]), True,
+                                                           (218, 68, 71), (67, 33, 57))
             scoreboard_text_object = scoreboard_text.get_rect()
             scoreboard_text_object.center = (512, 550)
             screen.blit(scoreboard_text, scoreboard_text_object)
@@ -410,10 +420,5 @@ if __name__ == '__main__':
     assert os.path.exists(FILE_PATH_WALL_HORIZONTAL), "Horizontal wall image file does not exist."
     assert os.path.exists(FILE_PATH_WALL_VERTICAL), "Vertical wall image file does not exist."
     assert os.path.exists(FILE_PATH_FONT), "Font file does not exist."
-
-    # Asserts pygame
-    assert pygame.get_init(), "Pygame did not initialize correctly."
-    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    assert screen is not None, "Failed to create pygame display."
 
     main()
