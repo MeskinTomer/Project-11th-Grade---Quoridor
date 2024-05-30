@@ -8,6 +8,7 @@ import socket
 import pygame
 import os
 import datetime
+import logging
 from Player import Player
 from Block import Block
 from Wall import Wall
@@ -26,6 +27,10 @@ PLAYER_BLUE = 1
 PLAYER_RED = 2
 COLS = 9
 ROWS = 9
+
+# Files Constants
+FILE_PATH_CURRENT = os.path.dirname(__file__)
+FILE_PATH_LOGS_FOLDER = os.path.join(FILE_PATH_CURRENT, '..', 'Log Files')
 
 # Commands
 ID = 'identification'
@@ -48,6 +53,9 @@ ACK = 'acknowledgement'
 ACK_VALID = 'valid'
 ACK_INVALID = 'invalid'
 
+log_file = os.path.join(FILE_PATH_LOGS_FOLDER, 'Server.log')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s', handlers=[
+                                                            logging.FileHandler(log_file), logging.StreamHandler()])
 
 def invert_movement(direction: str):
     if direction == MOVE_UP:
@@ -66,7 +74,6 @@ def invert_movement(direction: str):
 def invert_wall_cords(wall_pos, side):
     x_wall = int(wall_pos.split(' ')[0])
     y_wall = int(wall_pos.split(' ')[1])
-    print('x: ' + str(x_wall) + ' y: ' + str(y_wall))
     if side == 'horizontal':
         ret_val = (592 - x_wall, 688 - y_wall)
     elif side == 'vertical':
@@ -159,7 +166,7 @@ def main():
         server_socket.bind((IP, PORT))
         server_socket.listen(QUEUE_SIZE)
         server_socket.settimeout(SOCKET_TIMEOUT)
-        print("Listening for connections on port %d" % PORT)
+        logging.debug("Listening for connections on port %d" % PORT)
 
         client_socket1, client_address1 = server_socket.accept()
         client_socket2, client_address2 = server_socket.accept()
@@ -169,37 +176,28 @@ def main():
 
         client_socket1.send(shape_command(ID, ID_ONE))
         response = protocol_recv(client_socket1)
-        print('ID 1: ' + response[0] + response[1])
+        logging.debug('ID 1: ' + response[0] + response[1])
         if response[0] == ACK and response[1] == ACK_VALID:
             pass
         else:
-            print('Error with Ack after ID - client 1')
+            logging.debug('Error with Ack after ID - client 1')
 
         client_socket2.send(shape_command(ID, ID_TWO))
         response = protocol_recv(client_socket2)
-        print('ID 2: ' + response[0] + response[1])
+        logging.debug('ID 2: ' + response[0] + response[1])
         if response[0] == ACK and response[1] == ACK_VALID:
             pass
         else:
-            print('Error with Ack after ID - client 2')
+            logging.debug('Error with Ack after ID - client 2')
 
         # Setting client 2 - not your turn
         client_socket2.send(shape_command(TURN, NOT_YOUR_TURN))
         response = protocol_recv(client_socket2)
-        print('Not Your Turn: ' + response[0] + response[1])
+        logging.info('Not Your Turn: ' + response[0] + response[1])
         if response[0] == ACK and response[1] == ACK_VALID:
             pass
         else:
-            print('Error with Ack after TURN - client 2')
-
-        # response = protocol_recv(client_socket1)
-        # print(response)
-        # if response[0] == ACK and response[1] == ACK_VALID:
-        #     client_socket1.send(shape_command(WALL, '268 398'))
-        # response = protocol_recv(client_socket1)
-        # print(response)
-        # if response[0] == ACK and response[1] == ACK_VALID:
-        #     client_socket1.send(shape_command(TURN, YOUR_TURN))
+            logging.debug('Error with Ack after TURN - client 2')
 
         # Setting the first player to go
         player_turn_id = PLAYER_BLUE
@@ -226,32 +224,32 @@ def main():
                         update_data = str(update_data[0]) + ' ' + str(update_data[1])
                     current_socket.send(shape_command(update[0], update_data))
                     response = protocol_recv(current_socket)
-                    print('Update: ' + response[0] + response[1])
+                    logging.info('Update: ' + response[0] + response[1])
                     if response[0] == ACK and response[1] == ACK_VALID:
                         pass
                     else:
-                        print('Error with Ack after UPDATE')
+                        logging.debug('Error with Ack after UPDATE')
 
                 # Sending 'Your Turn'
                 current_socket.send(shape_command(TURN, YOUR_TURN))
 
                 response = protocol_recv(current_socket)
-                print('Turn: ' + response[0] + response[1])
+                logging.info('Turn: ' + response[0] + response[1])
                 if response[0] == ACK and response[1] == ACK_VALID:
                     pass
                 else:
-                    print('Error with Ack after TURN')
+                    logging.debug('Error with Ack after TURN')
 
                 # Making requested turn
                 data = protocol_recv(current_socket)
                 if data:
-                    print(data)
+                    logging.info(data)
                     if data[0] == MOVE:
                         direction = data[1]
                         if player_turn_id == PLAYER_RED:
                             direction = invert_movement(direction)
                         mouse_pos = calculate_new_mouse_pos(player_turn_object, player_blue_object, player_red_object, player_turn_id, direction)
-                        print(mouse_pos)
+                        logging.info(mouse_pos)
                         side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
                         if side != 'invalid':
                             current_socket.send(shape_command(ACK, ACK_VALID))
@@ -269,6 +267,7 @@ def main():
                     elif data[0] == WALL:
                         wall_pos = (int(data[1].split(' ')[0]), int(data[1].split(' ')[1]))
                         side = is_trying_to_place_wall(wall_pos)
+                        logging.info(side)
                         if player_turn_id == PLAYER_RED:
                             wall_pos = invert_wall_cords(data[1], side)
                         add_wall_without_graphics(wall_pos, wall_list, blocks_array, side)
@@ -288,6 +287,7 @@ def main():
                     elif data[0] == NO_MOVE:
                         current_socket.send(shape_command(ACK, ACK_VALID))
                         update = (data[0], data[1])
+                        logging.info(data)
                         if player_turn_id == PLAYER_BLUE:
                             player_turn_object = player_red_object
                             current_socket = client_socket2
@@ -297,7 +297,7 @@ def main():
                             current_socket = client_socket1
                             player_turn_id = PLAYER_BLUE
                     elif data[0] == DISCONNECT:
-                        print('Disconnected')
+                        logging.info('Disconnected')
                         if player_turn_id == PLAYER_BLUE:
                             player_turn_object = player_red_object
                             current_socket = client_socket2
@@ -330,7 +330,7 @@ def main():
 
                     wall_list.clear()
         except socket.timeout:
-            print('Timeout')
+            logging.error('Timeout')
             if player_turn_id == PLAYER_BLUE:
                 player_turn_object = player_red_object
                 current_socket = client_socket2
@@ -343,7 +343,7 @@ def main():
             current_socket.send(shape_command(WIN, BLANK))
             finish = True
     except socket.error as err:
-        print('received socket exception - ' + str(err))
+        logging.error('received socket exception - ' + str(err))
         if err.errno == 10053:
             if player_turn_id == PLAYER_BLUE:
                 player_turn_object = player_red_object

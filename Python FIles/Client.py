@@ -13,6 +13,7 @@ from Block import Block
 from Wall import Wall
 import time
 import select
+import logging
 from GameFunctions import *
 from Protocol import *
 
@@ -30,6 +31,7 @@ BACKGROUND_COLOR = (56, 228, 129)
 FILE_PATH_CURRENT = os.path.dirname(__file__)
 FILE_PATH_IMAGES_FOLDER = os.path.join(FILE_PATH_CURRENT, '..', 'Images')
 FILE_PATH_FONTS_FOLDER = os.path.join(FILE_PATH_CURRENT, '..', 'Fonts')
+FILE_PATH_LOGS_FOLDER = os.path.join(FILE_PATH_CURRENT, '..', 'Log Files')
 FILE_PATH_BOARD = os.path.join(FILE_PATH_IMAGES_FOLDER, 'quoridor_board.png')
 FILE_PATH_BOARD_BLANK = os.path.join(FILE_PATH_IMAGES_FOLDER, 'quoridor_board_blank.png')
 FILE_PATH_BLUE_PLAYER = os.path.join(FILE_PATH_IMAGES_FOLDER, 'player_blue.png')
@@ -70,6 +72,10 @@ DISCONNECT = 'disconnect'
 ACK = 'acknowledgement'
 ACK_VALID = 'valid'
 ACK_INVALID = 'invalid'
+
+log_file = os.path.join(FILE_PATH_LOGS_FOLDER, 'Client.log')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s', handlers=[
+                                                            logging.FileHandler(log_file), logging.StreamHandler()])
 
 
 def main():
@@ -162,11 +168,11 @@ def main():
     try:
         my_socket.connect((IP, PORT))
     except socket.error as err:
-        print(err)
+        logging.error(err)
 
     # Setting ID
     data = protocol_recv(my_socket)
-    print(data)
+    logging.info(data)
     if data[0] == ID:
         if data[1] == ID_ONE:
             my_socket.send(shape_command(ACK, ACK_VALID))
@@ -178,7 +184,7 @@ def main():
     player_turn_object = player_blue_object
 
     data = protocol_recv(my_socket)
-    print(data)
+    logging.info(data)
     if data[0] == TURN:
         if data[1] == YOUR_TURN:
             turn = True
@@ -279,9 +285,8 @@ def main():
             for s in readable:
                 if s is my_socket:
                     data = protocol_recv(s)
-                    print(data)
                     if data:
-                        print(data)
+                        logging.info(data)
                         if data[0] == TURN:
                             if data[1] == YOUR_TURN:
                                 turn = True
@@ -300,22 +305,21 @@ def main():
                                 my_socket.send(shape_command(ACK, ACK_VALID))
                         elif data[0] == MOVE:
                             mouse_pos = calculate_new_mouse_pos(player_red_object, player_blue_object, player_red_object, player_turn_id, data[1])
-                            print(mouse_pos)
                             side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
-                            print(side)
+                            logging.info(side)
                             if side != 'invalid':
                                 my_socket.send(shape_command(ACK, ACK_VALID))
                         elif data[0] == WALL:
                             wall_pos = (int(data[1].split(' ')[0]), int(data[1].split(' ')[1]))
                             side = wall_addition_function(wall_pos, wall_list, blocks_array, screen)[0]
-                            print('Side: ' + side)
+                            logging.info('Side: ' + side)
                             if side != 'invalid':
                                 my_socket.send(shape_command(ACK, ACK_VALID))
                         elif data[0] == NO_MOVE:
-                            print('No Move')
+                            logging.info('No Move')
                             my_socket.send(shape_command(ACK, ACK_VALID))
                         elif data[0] == WIN:
-                            print('Win')
+                            logging.info('Win')
                             finish = True
 
                             screen.blit(blank_board, [0, 0])
@@ -334,7 +338,7 @@ def main():
                             break
 
                     else:
-                        print('closed')
+                        logging.info('closed')
                         finish = True
 
         screen.blit(board, [0, 0])

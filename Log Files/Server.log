@@ -1,0 +1,31 @@
+2024-05-30 22:54:14,601 DEBUG Listening for connections on port 1779
+2024-05-30 22:54:18,533 DEBUG ID 1: acknowledgementvalid
+2024-05-30 22:54:18,533 DEBUG ID 2: acknowledgementvalid
+2024-05-30 22:54:18,534 INFO Not Your Turn: acknowledgementvalid
+2024-05-30 22:54:18,534 INFO Turn: acknowledgementvalid
+2024-05-30 22:54:22,084 INFO ('move', 'up')
+2024-05-30 22:54:22,084 INFO (336, 576)
+2024-05-30 22:54:22,085 INFO Update: acknowledgementvalid
+2024-05-30 22:54:22,091 INFO Turn: acknowledgementvalid
+2024-05-30 22:54:23,016 INFO ('move', 'up')
+2024-05-30 22:54:23,016 INFO (336, 96)
+2024-05-30 22:54:23,016 INFO Update: acknowledgementvalid
+2024-05-30 22:54:23,022 INFO Turn: acknowledgementvalid
+2024-05-30 22:54:23,681 INFO ('move', 'up')
+2024-05-30 22:54:23,681 INFO (336, 496)
+2024-05-30 22:54:23,684 INFO Update: acknowledgementvalid
+2024-05-30 22:54:23,702 INFO Turn: acknowledgementvalid
+2024-05-30 22:54:24,692 INFO ('wall', '336 224')
+2024-05-30 22:54:24,692 INFO horizontal
+2024-05-30 22:54:24,693 INFO Update: acknowledgementvalid
+2024-05-30 22:54:24,698 INFO Turn: acknowledgementvalid
+2024-05-30 22:54:25,471 INFO ('move', 'right')
+2024-05-30 22:54:25,471 INFO (416, 496)
+2024-05-30 22:54:25,471 INFO Update: acknowledgementvalid
+2024-05-30 22:54:25,481 INFO Turn: acknowledgementvalid
+2024-05-30 22:54:26,207 INFO ('move', 'up')
+2024-05-30 22:54:26,207 INFO (336, 176)
+2024-05-30 22:54:26,208 INFO Update: acknowledgementvalid
+2024-05-30 22:54:26,214 INFO Turn: acknowledgementvalid
+2024-05-30 22:54:28,933 INFO ('disconnect', '')
+2024-05-30 22:54:28,934 INFO Disconnected
