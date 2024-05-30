@@ -402,4 +402,18 @@ def main():
     
 
 if __name__ == '__main__':
+    # Asserts for file paths
+    assert os.path.exists(FILE_PATH_BOARD), "Board image file does not exist."
+    assert os.path.exists(FILE_PATH_BOARD_BLANK), "Blank board image file does not exist."
+    assert os.path.exists(FILE_PATH_BLUE_PLAYER), "Blue player image file does not exist."
+    assert os.path.exists(FILE_PATH_RED_PLAYER), "Red player image file does not exist."
+    assert os.path.exists(FILE_PATH_WALL_HORIZONTAL), "Horizontal wall image file does not exist."
+    assert os.path.exists(FILE_PATH_WALL_VERTICAL), "Vertical wall image file does not exist."
+    assert os.path.exists(FILE_PATH_FONT), "Font file does not exist."
+
+    # Asserts pygame
+    assert pygame.get_init(), "Pygame did not initialize correctly."
+    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    assert screen is not None, "Failed to create pygame display."
+
     main()

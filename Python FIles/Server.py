@@ -361,4 +361,16 @@ def main():
 
 
 if __name__ == '__main__':
+    # Asserts for invert_movement
+    assert invert_movement(MOVE_UP) == MOVE_DOWN
+    assert invert_movement(MOVE_DOWN) == MOVE_UP
+    assert invert_movement(MOVE_RIGHT) == MOVE_LEFT
+    assert invert_movement(MOVE_LEFT) == MOVE_RIGHT
+    assert invert_movement('invalid') == 'invalid'
+
+    # Asserts for invert_wall_cords
+    assert invert_wall_cords('80 80', 'horizontal') == (512, 608)
+    assert invert_wall_cords('80 80', 'vertical') == (608, 512)
+    assert invert_wall_cords('80 80', 'invalid') == ()
+
     main()
