@@ -13,7 +13,6 @@ Has a timeout of 1.5 minutes for a player's turn to resign
 User -
 Has Select mechanism for user input and Pygame screen
 Starts own timer of it's/other's turn. - 1-minute timer.
-Has a PathFinding mechanism for checking viability of wall placement.
 Has a User Input mechanism
 
 Both -

@@ -65,6 +65,8 @@ MOVE_DOWN = 'down'
 WALL = 'wall'
 NO_MOVE = 'no move'
 BLANK = ''
+WIN = 'win'
+DISCONNECT = 'disconnect'
 ACK = 'acknowledgement'
 ACK_VALID = 'valid'
 ACK_INVALID = 'invalid'
@@ -228,6 +230,7 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     finish = True
+                    my_socket.send(shape_command(DISCONNECT, BLANK))
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT and turn:
                     mouse_pos = pygame.mouse.get_pos()
                     side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
@@ -311,6 +314,24 @@ def main():
                         elif data[0] == NO_MOVE:
                             print('No Move')
                             my_socket.send(shape_command(ACK, ACK_VALID))
+                        elif data[0] == WIN:
+                            print('Win')
+                            finish = True
+
+                            screen.blit(blank_board, [0, 0])
+                            win_text = font_timer_scoreboard.render('Red Player Disconnected', True, (72, 114, 206), (67, 33, 57))
+                            win_text_object = win_text.get_rect()
+                            win_text_object.center = (512, 360)
+                            screen.blit(win_text, win_text_object)
+
+                            pygame.display.flip()
+
+                            quit_game = False
+                            while not quit_game:
+                                for event in pygame.event.get():
+                                    if event.type == pygame.QUIT:
+                                        finish = True
+                            break
 
                     else:
                         print('closed')

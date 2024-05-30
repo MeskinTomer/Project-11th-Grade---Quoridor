@@ -42,6 +42,8 @@ MOVE_DOWN = 'down'
 WALL = 'wall'
 NO_MOVE = 'no move'
 BLANK = ''
+WIN = 'win'
+DISCONNECT = 'disconnect'
 ACK = 'acknowledgement'
 ACK_VALID = 'valid'
 ACK_INVALID = 'invalid'
@@ -156,10 +158,14 @@ def main():
     try:
         server_socket.bind((IP, PORT))
         server_socket.listen(QUEUE_SIZE)
+        server_socket.settimeout(SOCKET_TIMEOUT)
         print("Listening for connections on port %d" % PORT)
 
         client_socket1, client_address1 = server_socket.accept()
         client_socket2, client_address2 = server_socket.accept()
+
+        client_socket1.settimeout(SOCKET_TIMEOUT)
+        client_socket2.settimeout(SOCKET_TIMEOUT)
 
         client_socket1.send(shape_command(ID, ID_ONE))
         response = protocol_recv(client_socket1)
@@ -207,111 +213,149 @@ def main():
         score = [0, 0]
 
         finish = False
-        while not finish:
-            # Sending updates
-            if update:
-                update_data = update[1]
-                if update[0] == MOVE:
-                    update_data = invert_movement(update[1])
-                elif update[0] == WALL:
-                    side_update = is_trying_to_place_wall((int(update[1].split(' ')[0]), int(update[1].split(' ')[1])))
-                    update_data = invert_wall_cords(update[1], side_update)
-                    update_data = str(update_data[0]) + ' ' + str(update_data[1])
-                current_socket.send(shape_command(update[0], update_data))
+        try:
+            while not finish:
+                # Sending updates
+                if update:
+                    update_data = update[1]
+                    if update[0] == MOVE:
+                        update_data = invert_movement(update[1])
+                    elif update[0] == WALL:
+                        side_update = is_trying_to_place_wall((int(update[1].split(' ')[0]), int(update[1].split(' ')[1])))
+                        update_data = invert_wall_cords(update[1], side_update)
+                        update_data = str(update_data[0]) + ' ' + str(update_data[1])
+                    current_socket.send(shape_command(update[0], update_data))
+                    response = protocol_recv(current_socket)
+                    print('Update: ' + response[0] + response[1])
+                    if response[0] == ACK and response[1] == ACK_VALID:
+                        pass
+                    else:
+                        print('Error with Ack after UPDATE')
+
+                # Sending 'Your Turn'
+                current_socket.send(shape_command(TURN, YOUR_TURN))
+
                 response = protocol_recv(current_socket)
-                print('Update: ' + response[0] + response[1])
+                print('Turn: ' + response[0] + response[1])
                 if response[0] == ACK and response[1] == ACK_VALID:
                     pass
                 else:
-                    print('Error with Ack after UPDATE')
+                    print('Error with Ack after TURN')
 
-            # Sending 'Your Turn'
-            current_socket.send(shape_command(TURN, YOUR_TURN))
+                # Making requested turn
+                data = protocol_recv(current_socket)
+                if data:
+                    print(data)
+                    if data[0] == MOVE:
+                        direction = data[1]
+                        if player_turn_id == PLAYER_RED:
+                            direction = invert_movement(direction)
+                        mouse_pos = calculate_new_mouse_pos(player_turn_object, player_blue_object, player_red_object, player_turn_id, direction)
+                        print(mouse_pos)
+                        side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
+                        if side != 'invalid':
+                            current_socket.send(shape_command(ACK, ACK_VALID))
+                            update = (data[0], data[1])
+                            if player_turn_id == PLAYER_BLUE:
+                                player_turn_object = player_red_object
+                                current_socket = client_socket2
+                                player_turn_id = PLAYER_RED
+                            else:
+                                player_turn_object = player_blue_object
+                                current_socket = client_socket1
+                                player_turn_id = PLAYER_BLUE
+                        else:
+                            current_socket.send(shape_command(ACK, ACK_INVALID))
+                    elif data[0] == WALL:
+                        wall_pos = (int(data[1].split(' ')[0]), int(data[1].split(' ')[1]))
+                        side = is_trying_to_place_wall(wall_pos)
+                        if player_turn_id == PLAYER_RED:
+                            wall_pos = invert_wall_cords(data[1], side)
+                        add_wall_without_graphics(wall_pos, wall_list, blocks_array, side)
+                        if side != 'invalid':
+                            current_socket.send(shape_command(ACK, ACK_VALID))
+                            update = (data[0], data[1])
+                            if player_turn_id == PLAYER_BLUE:
+                                player_turn_object = player_red_object
+                                current_socket = client_socket2
+                                player_turn_id = PLAYER_RED
+                            else:
+                                player_turn_object = player_blue_object
+                                current_socket = client_socket1
+                                player_turn_id = PLAYER_BLUE
+                        else:
+                            current_socket.send(shape_command(ACK, ACK_INVALID))
+                    elif data[0] == NO_MOVE:
+                        current_socket.send(shape_command(ACK, ACK_VALID))
+                        update = (data[0], data[1])
+                        if player_turn_id == PLAYER_BLUE:
+                            player_turn_object = player_red_object
+                            current_socket = client_socket2
+                            player_turn_id = PLAYER_RED
+                        else:
+                            player_turn_object = player_blue_object
+                            current_socket = client_socket1
+                            player_turn_id = PLAYER_BLUE
+                    elif data[0] == DISCONNECT:
+                        print('Disconnected')
+                        if player_turn_id == PLAYER_BLUE:
+                            player_turn_object = player_red_object
+                            current_socket = client_socket2
+                            player_turn_id = PLAYER_RED
+                        else:
+                            player_turn_object = player_blue_object
+                            current_socket = client_socket1
+                            player_turn_id = PLAYER_BLUE
 
-            response = protocol_recv(current_socket)
-            print('Turn: ' + response[0] + response[1])
-            if response[0] == ACK and response[1] == ACK_VALID:
-                pass
+                        current_socket.send(shape_command(WIN, BLANK))
+                        finish = True
+
+                # Check if someone won the game
+                winner = check_win(player_blue_object, player_red_object)
+                if winner != 'None':
+                    if winner == 'blue':
+                        score[0] += 1
+                    else:
+                        score[1] += 1
+
+                    for i in range(ROWS):
+                        for j in range(COLS):
+                            blocks_array[i][j].restart_block()
+
+                    player_blue_object.restart('blue')
+                    player_red_object.restart('red')
+
+                    blocks_array[player_blue_object.block[0]][player_blue_object.block[1]].update_player(PLAYER_BLUE)
+                    blocks_array[player_red_object.block[0]][player_red_object.block[1]].update_player(PLAYER_RED)
+
+                    wall_list.clear()
+        except socket.timeout:
+            print('Timeout')
+            if player_turn_id == PLAYER_BLUE:
+                player_turn_object = player_red_object
+                current_socket = client_socket2
+                player_turn_id = PLAYER_RED
             else:
-                print('Error with Ack after TURN')
+                player_turn_object = player_blue_object
+                current_socket = client_socket1
+                player_turn_id = PLAYER_BLUE
 
-            # Making requested turn
-            data = protocol_recv(current_socket)
-            if data:
-                print(data)
-                if data[0] == MOVE:
-                    direction = data[1]
-                    if player_turn_id == PLAYER_RED:
-                        direction = invert_movement(direction)
-                    mouse_pos = calculate_new_mouse_pos(player_turn_object, player_blue_object, player_red_object, player_turn_id, direction)
-                    print(mouse_pos)
-                    side = player_movement_function(mouse_pos, blocks_array, player_turn_id, player_turn_object, player_blue_object, player_red_object)
-                    if side != 'invalid':
-                        current_socket.send(shape_command(ACK, ACK_VALID))
-                        update = (data[0], data[1])
-                        if player_turn_id == PLAYER_BLUE:
-                            player_turn_object = player_red_object
-                            current_socket = client_socket2
-                            player_turn_id = PLAYER_RED
-                        else:
-                            player_turn_object = player_blue_object
-                            current_socket = client_socket1
-                            player_turn_id = PLAYER_BLUE
-                    else:
-                        current_socket.send(shape_command(ACK, ACK_INVALID))
-                elif data[0] == WALL:
-                    wall_pos = (int(data[1].split(' ')[0]), int(data[1].split(' ')[1]))
-                    side = is_trying_to_place_wall(wall_pos)
-                    if player_turn_id == PLAYER_RED:
-                        wall_pos = invert_wall_cords(data[1], side)
-                    add_wall_without_graphics(wall_pos, wall_list, blocks_array, side)
-                    if side != 'invalid':
-                        current_socket.send(shape_command(ACK, ACK_VALID))
-                        update = (data[0], data[1])
-                        if player_turn_id == PLAYER_BLUE:
-                            player_turn_object = player_red_object
-                            current_socket = client_socket2
-                            player_turn_id = PLAYER_RED
-                        else:
-                            player_turn_object = player_blue_object
-                            current_socket = client_socket1
-                            player_turn_id = PLAYER_BLUE
-                    else:
-                        current_socket.send(shape_command(ACK, ACK_INVALID))
-                elif data[0] == NO_MOVE:
-                    current_socket.send(shape_command(ACK, ACK_VALID))
-                    update = (data[0], data[1])
-                    if player_turn_id == PLAYER_BLUE:
-                        player_turn_object = player_red_object
-                        current_socket = client_socket2
-                        player_turn_id = PLAYER_RED
-                    else:
-                        player_turn_object = player_blue_object
-                        current_socket = client_socket1
-                        player_turn_id = PLAYER_BLUE
-
-            # Check if someone won the game
-            winner = check_win(player_blue_object, player_red_object)
-            if winner != 'None':
-                if winner == 'blue':
-                    score[0] += 1
-                else:
-                    score[1] += 1
-
-                for i in range(ROWS):
-                    for j in range(COLS):
-                        blocks_array[i][j].restart_block()
-
-                player_blue_object.restart('blue')
-                player_red_object.restart('red')
-
-                blocks_array[player_blue_object.block[0]][player_blue_object.block[1]].update_player(PLAYER_BLUE)
-                blocks_array[player_red_object.block[0]][player_red_object.block[1]].update_player(PLAYER_RED)
-
-                wall_list.clear()
-
+            current_socket.send(shape_command(WIN, BLANK))
+            finish = True
     except socket.error as err:
         print('received socket exception - ' + str(err))
+        if err.errno == 10053:
+            if player_turn_id == PLAYER_BLUE:
+                player_turn_object = player_red_object
+                current_socket = client_socket2
+                player_turn_id = PLAYER_RED
+            else:
+                player_turn_object = player_blue_object
+                current_socket = client_socket1
+                player_turn_id = PLAYER_BLUE
+
+            current_socket.send(shape_command(WIN, BLANK))
+            finish = True
     finally:
         server_socket.close()
 

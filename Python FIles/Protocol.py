@@ -20,6 +20,8 @@ MOVE_DOWN = 'down'
 WALL = 'wall'
 NO_MOVE = 'no move'
 BLANK = ''
+WIN = 'win'
+DISCONNECT = 'disconnect'
 ACK = 'acknowledgement'
 ACK_VALID = 'valid'
 ACK_INVALID = 'invalid'
@@ -76,7 +78,7 @@ def protocol_recv(my_socket):
 
 
 def shape_command(command, value):
-    if command == ID or command == TURN or command == MOVE or command == WALL or command == ACK or command == NO_MOVE:
+    if command == ID or command == TURN or command == MOVE or command == WALL or command == ACK or command == NO_MOVE or command == WIN or command == DISCONNECT:
         ret_val = protocol_send(command, value)
     else:
         ret_val = 'error'
